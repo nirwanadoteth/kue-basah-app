@@ -32,6 +32,11 @@ interface InventoryStore {
   addProduct: (product: ProductInsert) => Promise<void>
   updateProduct: (id: number, updates: ProductUpdate) => Promise<void>
   deleteProduct: (id: number) => Promise<void>
+  updateStock: (
+    productId: number,
+    quantity: number,
+    type: "addition" | "reduction"
+  ) => Promise<void>
 
   // Getters
   getTotalStock: () => number
@@ -141,6 +146,43 @@ export const useInventoryStore = create<InventoryStore>()(
           toast.success(`Produk "${product?.name}" berhasil dihapus.`)
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : "Failed to delete product"
+          set({ error: errorMessage, isLoading: false })
+          toast.error(errorMessage)
+          throw error
+        }
+      },
+
+      // Stock management
+      updateStock: async (productId, quantity, type) => {
+        try {
+          set({ isLoading: true, error: null })
+
+          // Check if product exists
+          const currentProduct = get().products.find((p) => p.id === productId)
+          if (!currentProduct) {
+            throw new Error("Produk tidak ditemukan")
+          }
+
+          // Check if reducing stock would result in negative stock
+          if (type === "reduction" && currentProduct.current_stock < quantity) {
+            throw new Error(
+              `Stok tidak mencukupi. Stok saat ini: ${currentProduct.current_stock}`
+            )
+          }
+
+          // Update stock using ProductsAPI
+          const updatedProduct = await ProductsAPI.updateStock(productId, quantity, type)
+
+          set((state) => ({
+            products: state.products.map((p) =>
+              p.id === productId ? updatedProduct : p
+            ),
+            isLoading: false,
+          }))
+
+          toast.success(`Stok produk "${updatedProduct.name}" berhasil diperbarui.`)
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : "Failed to update stock"
           set({ error: errorMessage, isLoading: false })
           toast.error(errorMessage)
           throw error

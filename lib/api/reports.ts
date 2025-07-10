@@ -114,47 +114,7 @@ export class ReportsAPI {
     }
   }
 
-  // Process transaction data for trend analysis
-  private static processTransactionTrend(transactions: Array<{ transaction_date: string; type: string }>) {
-    try {
-      const trendMap = new Map<string, { additions: number; reductions: number }>()
-
-      transactions.forEach((transaction) => {
-        // Add null checks
-        if (!transaction || !transaction.transaction_date || !transaction.type) {
-          return
-        }
-
-        const date = transaction.transaction_date
-        if (!trendMap.has(date)) {
-          trendMap.set(date, { additions: 0, reductions: 0 })
-        }
-
-        const trend = trendMap.get(date)!
-        if (transaction.type === "addition") {
-          trend.additions++
-        } else if (transaction.type === "reduction") {
-          trend.reductions++
-        }
-      })
-
-      return Array.from(trendMap.entries())
-        .map(([date, data]) => ({
-          date: date || "Unknown",
-          ...data,
-        }))
-        .sort((a, b) => {
-          try {
-            return a.date.localeCompare(b.date)
-          } catch (error) {
-            return 0
-          }
-        })
-    } catch (error) {
-      console.error("Error processing transaction trend:", error)
-      return []
-    }
-  }
+  
 
   // Generate current report
   static async generateCurrentReport(): Promise<DailyReport | null> {

@@ -172,7 +172,7 @@ export function TransactionDetailsModal({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
               <div>
                 <p className="text-sm text-gray-600">Admin</p>
-                <p className="font-semibold">{transaction.user_name}</p>
+                <p className="font-semibold">{transaction.users?.username}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-600">Tanggal</p>

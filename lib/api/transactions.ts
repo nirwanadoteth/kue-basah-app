@@ -16,7 +16,7 @@ export class TransactionsAPI {
         .select(
           `
           *,
-          users(full_name, username)
+          users(username)
         `,
         )
         .order("created_at", { ascending: false })
@@ -42,7 +42,7 @@ export class TransactionsAPI {
           return {
             ...transaction,
             details: details || [],
-            user_name: transaction.users?.full_name || transaction.users?.username || "Unknown",
+            user_name: transaction.users?.username || "Unknown",
           }
         }),
       )
@@ -62,7 +62,7 @@ export class TransactionsAPI {
         .select(
           `
           *,
-          users(full_name, username)
+          users(username)
         `,
         )
         .eq("id", id)
@@ -90,7 +90,7 @@ export class TransactionsAPI {
       return {
         ...transaction,
         details: details || [],
-        user_name: transaction.users?.full_name || transaction.users?.username || "Unknown",
+        user_name: transaction.users?.username || "Unknown",
       }
     } catch (error) {
       console.error("Error in TransactionsAPI.getById:", error)
@@ -316,7 +316,7 @@ export class TransactionsAPI {
         .select(
           `
           *,
-          users(full_name, username)
+          users(username)
         `,
         )
         .gte("created_at", startDate)
@@ -340,7 +340,7 @@ export class TransactionsAPI {
           return {
             ...transaction,
             details: details || [],
-            user_name: transaction.users?.full_name || transaction.users?.username || "Unknown",
+            user_name: transaction.users?.username || "Unknown",
           }
         }),
       )

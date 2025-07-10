@@ -99,9 +99,6 @@ export interface User {
   id: number
   username: string
   password_hash: string
-  full_name: string | null
-  role: string // Default: 'user'
-  is_active: boolean // Default: true
   created_at: string
   updated_at: string
   last_login: string | null
@@ -111,14 +108,10 @@ export interface User {
 export interface Transaction {
   id: number
   user_id: number
-  customer_name: string | null
-  customer_phone: string | null
   total_price: number
-  status: "pending" | "completed" | "cancelled"
-  notes: string | null
   created_at: string
   updated_at: string
-  users?: { full_name?: string; username?: string } // For joins
+  users?: { username?: string } // For joins
 }
 
 // Transaction Details table
@@ -166,15 +159,11 @@ export type DailyReportUpdate = Partial<Omit<DailyReport, "id" | "created_at">>
 export interface AuthUser {
   user_id: number
   username: string
-  full_name: string | null
-  role: string
-  is_active: boolean
 }
 
 // Transaction with details (for display)
 export interface TransactionWithDetails extends Transaction {
   details: TransactionDetail[]
-  user_name?: string
 }
 
 // Transaction detail with product info

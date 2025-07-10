@@ -77,7 +77,7 @@ export function CreateTransactionModal({ trigger, onTransactionCreated, isOrder 
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
+      <DialogTrigger>{trigger}</DialogTrigger>
       <DialogContent className="sm:max-w-md cotton-candy-card border-pink-200">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-gray-800">

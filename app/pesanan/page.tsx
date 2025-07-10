@@ -39,6 +39,7 @@ export default function TransactionsPage() {
     averageOrderValue: 0,
   })
   const [error, setError] = useState<string | null>(null)
+  const [showDetailsModalForTransactionId, setShowDetailsModalForTransactionId] = useState<number | null>(null)
 
   useEffect(() => {
     initializeData()
@@ -91,8 +92,7 @@ export default function TransactionsPage() {
       filtered = transactions.filter(
         (transaction) =>
           transaction.id.toString().includes(searchLower) ||
-          transaction.customer_name?.toLowerCase().includes(searchLower) ||
-          transaction.user_name?.toLowerCase().includes(searchLower),
+          transaction.users?.username?.toLowerCase().includes(searchLower),
       )
     }
 
@@ -152,7 +152,7 @@ export default function TransactionsPage() {
   const handleTransactionCreated = (transactionId: number) => {
     loadTransactions()
     loadStats()
-    // Optionally, you could open the details modal for the new transaction
+    setShowDetailsModalForTransactionId(transactionId)
   }
 
   const handleTransactionUpdated = () => {
@@ -344,7 +344,7 @@ export default function TransactionsPage() {
                           <div className="w-8 h-8 rounded-full bg-gradient-to-r from-pink-200 to-purple-200 flex items-center justify-center">
                             <User className="h-4 w-4 text-pink-600" />
                           </div>
-                          <span className="font-semibold text-gray-900">{transaction.user_name}</span>
+                          <span className="font-semibold text-gray-900">{transaction.users?.username}</span>
                         </div>
                       </td>
                       <td className="py-4 px-6 text-gray-600">{transaction.details.length} item</td>
@@ -384,6 +384,17 @@ export default function TransactionsPage() {
         </div>
         <p className="mt-2 text-xs">Kelola semua jenis transaksi dengan mudah dan pantau pendapatan secara real-time</p>
       </div>
+
+      {showDetailsModalForTransactionId && (
+        <TransactionDetailsModal
+          transactionId={showDetailsModalForTransactionId}
+          onTransactionUpdated={() => {
+            handleTransactionUpdated()
+            setShowDetailsModalForTransactionId(null) // Close after update
+          }}
+          trigger={<div className="hidden" />}
+        />
+      )}
     </div>
   )
 }

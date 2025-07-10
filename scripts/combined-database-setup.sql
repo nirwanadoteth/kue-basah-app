@@ -47,9 +47,6 @@ CREATE TABLE users (
     id BIGSERIAL PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
-    full_name VARCHAR(100),
-    role VARCHAR(20) DEFAULT 'user',
-    is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     last_login TIMESTAMP WITH TIME ZONE
@@ -59,11 +56,7 @@ CREATE TABLE users (
 CREATE TABLE transactions (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
-    customer_name VARCHAR(255),
-    customer_phone VARCHAR(50),
     total_price DECIMAL(12,2) NOT NULL DEFAULT 0,
-    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'completed', 'cancelled')),
-    notes TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -98,9 +91,7 @@ CREATE TABLE daily_reports (
 CREATE INDEX idx_products_name ON products(name);
 CREATE INDEX idx_products_current_stock ON products(current_stock);
 CREATE INDEX idx_users_username ON users(username);
-CREATE INDEX idx_users_active ON users(is_active);
 CREATE INDEX idx_transactions_user_id ON transactions(user_id);
-CREATE INDEX idx_transactions_status ON transactions(status);
 CREATE INDEX idx_transactions_created_at ON transactions(created_at);
 CREATE INDEX idx_transaction_details_transaction_id ON transaction_details(transaction_id);
 CREATE INDEX idx_transaction_details_product_id ON transaction_details(product_id);
@@ -137,17 +128,17 @@ CREATE TRIGGER update_transactions_updated_at
 
 -- Function to authenticate user
 CREATE OR REPLACE FUNCTION authenticate_user(p_username VARCHAR, p_password VARCHAR)
-RETURNS TABLE(user_id BIGINT, username VARCHAR, full_name VARCHAR, role VARCHAR, is_active BOOLEAN) 
-LANGUAGE plpgsql SECURITY DEFINER AS $$
+RETURNS TABLE(user_id BIGINT, username VARCHAR) 
+LANGUAGE plpgsql SECURITY DEFINER AS $
 BEGIN
     RETURN QUERY
-    SELECT u.id, u.username, u.full_name, u.role, u.is_active
+    SELECT u.id, u.username
     FROM users u
-    WHERE u.username = p_username AND u.password_hash = p_password AND u.is_active = true;
+    WHERE u.username = p_username AND u.password_hash = p_password;
     
-    UPDATE users SET last_login = NOW() WHERE users.username = p_username AND users.is_active = true;
+    UPDATE users SET last_login = NOW() WHERE users.username = p_username;
 END;
-$$;
+$;
 
 -- Function to calculate and update transaction total (patched version)
 CREATE OR REPLACE FUNCTION update_transaction_total(p_transaction_id BIGINT)
@@ -230,12 +221,12 @@ $$;
 -- Function to complete transaction (reduce stock)
 CREATE OR REPLACE FUNCTION complete_transaction(p_transaction_id BIGINT)
 RETURNS BOOLEAN
-LANGUAGE plpgsql AS $$
+LANGUAGE plpgsql AS $
 DECLARE
     detail_record RECORD;
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM transactions WHERE id = p_transaction_id AND status = 'pending') THEN
-        RAISE EXCEPTION 'Transaction not found or not pending';
+    IF NOT EXISTS (SELECT 1 FROM transactions WHERE id = p_transaction_id) THEN
+        RAISE EXCEPTION 'Transaction not found';
     END IF;
     
     FOR detail_record IN 
@@ -248,13 +239,9 @@ BEGIN
         WHERE id = detail_record.product_id;
     END LOOP;
     
-    UPDATE transactions
-    SET status = 'completed', updated_at = NOW()
-    WHERE id = p_transaction_id;
-    
     RETURN true;
 END;
-$$;
+$;
 
 -- ------------------------------------------------------------------
 -- 🔒 Enable Row Level Security (RLS) and Policies
@@ -276,11 +263,11 @@ CREATE POLICY "Allow all operations on daily_reports" ON daily_reports FOR ALL U
 -- ------------------------------------------------------------------
 
 -- Insert default users
-INSERT INTO users (username, password_hash, full_name, role) VALUES 
-('admin', 'admin123', 'Administrator', 'admin'),
-('nay', 'admin123', 'Nay Owner', 'admin'),
-('kasir1', 'admin123', 'Kasir Satu', 'user'),
-('kasir2', 'admin123', 'Kasir Dua', 'user')
+INSERT INTO users (username, password_hash) VALUES 
+('admin', 'admin123'),
+('nay', 'admin123'),
+('kasir1', 'admin123'),
+('kasir2', 'admin123')
 ON CONFLICT (username) DO NOTHING;
 
 -- Insert sample products
@@ -297,10 +284,10 @@ INSERT INTO products (name, price, current_stock, min_stock) VALUES
 ('Klepon', 1200.00, 25, 15);
 
 -- Insert sample transactions
-INSERT INTO transactions (user_id, customer_name, customer_phone, status, notes) VALUES
-(1, 'Ibu Sari', '081234567890', 'completed', 'Pesanan untuk acara keluarga'),
-(1, 'Pak Budi', '081234567891', 'completed', 'Pesanan reguler'),
-(2, 'Ibu Maya', '081234567892', 'pending', 'Pesanan untuk arisan');
+INSERT INTO transactions (user_id) VALUES
+(1),
+(1),
+(2);
 
 -- Insert sample transaction details
 INSERT INTO transaction_details (transaction_id, product_id, product_name, product_price, quantity) VALUES
