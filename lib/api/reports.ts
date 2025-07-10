@@ -68,7 +68,6 @@ export class ReportsAPI {
   static async getAnalytics(): Promise<{
     stockTrend: Array<{ date: string; stock: number; value: number }>
     productDistribution: Array<{ name: string; stock: number; value: number }>
-    transactionTrend: Array<{ date: string; additions: number; reductions: number }>
   }> {
     try {
       // Get stock trend from daily reports
@@ -93,20 +92,6 @@ export class ReportsAPI {
         console.error("Error fetching product data:", productError)
       }
 
-      // Get transaction trend
-      const { data: transactionData, error: transactionError } = await supabase
-        .from("transactions")
-        .select("transaction_date, type")
-        .gte("transaction_date", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0])
-        .order("transaction_date", { ascending: true })
-
-      if (transactionError) {
-        console.error("Error fetching transaction data:", transactionError)
-      }
-
-      // Process transaction data
-      const transactionTrend = this.processTransactionTrend(transactionData || [])
-
       return {
         stockTrend: (stockData || []).map((item) => ({
           date: item.report_date,
@@ -118,7 +103,6 @@ export class ReportsAPI {
           stock: item.current_stock,
           value: item.total_value,
         })),
-        transactionTrend,
       }
     } catch (error) {
       console.error("Error in ReportsAPI.getAnalytics:", error)
@@ -126,7 +110,6 @@ export class ReportsAPI {
       return {
         stockTrend: [],
         productDistribution: [],
-        transactionTrend: [],
       }
     }
   }

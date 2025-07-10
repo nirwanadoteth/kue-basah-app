@@ -30,11 +30,9 @@ export default function Reports() {
   const [analyticsData, setAnalyticsData] = useState<{
     stockTrend: Array<{ date: string; stock: number; value: number }>
     productDistribution: Array<{ name: string; stock: number; value: number }>
-    transactionTrend: Array<{ date: string; additions: number; reductions: number }>
   }>({
     stockTrend: [],
     productDistribution: [],
-    transactionTrend: [],
   })
 
   const {
@@ -280,46 +278,7 @@ export default function Reports() {
               </CardContent>
             </Card>
 
-            {/* Transaction Trend Chart */}
-            <Card className="cotton-candy-card rounded-2xl border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-purple-500" />
-                  Tren Transaksi
-                </CardTitle>
-                <div className="flex items-center space-x-2">
-                  <span className="text-3xl font-bold bg-gradient-to-r from-purple-500 to-indigo-500 bg-clip-text text-transparent">
-                    {transactions.length}
-                  </span>
-                  <span className="text-sm text-blue-600 bg-blue-100 px-2 py-1 rounded-full">30 Hari</span>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={250}>
-                  <LineChart data={analyticsData.transactionTrend}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                    <XAxis dataKey="date" tick={{ fontSize: 12, fill: "#64748b" }} />
-                    <YAxis tick={{ fontSize: 12, fill: "#64748b" }} />
-                    <Line
-                      type="monotone"
-                      dataKey="additions"
-                      stroke="#10B981"
-                      strokeWidth={3}
-                      dot={{ fill: "#10B981", strokeWidth: 2, r: 4 }}
-                      name="Penambahan"
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="reductions"
-                      stroke="#EF4444"
-                      strokeWidth={3}
-                      dot={{ fill: "#EF4444", strokeWidth: 2, r: 4 }}
-                      name="Pengurangan"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
+            
           </div>
 
           {/* Pie Chart */}

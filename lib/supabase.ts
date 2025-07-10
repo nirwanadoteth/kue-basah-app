@@ -51,9 +51,9 @@ export const testSupabaseConnection = async () => {
   }
 }
 
-// Check if tables exist - updated to include customer transaction tables
+// Check if tables exist
 export const checkTablesExist = async () => {
-  const tables = ["products", "users", "transactions", "daily_reports", "customer_transactions", "transaction_details"]
+  const tables = ["products", "users", "transactions", "transaction_details", "daily_reports"]
   const results = []
   let allTablesExist = true
 
@@ -107,24 +107,18 @@ export interface User {
   last_login: string | null
 }
 
-// Inventory Transactions table (existing)
+// Transactions table (previously customer_transactions)
 export interface Transaction {
   id: number
-  product_id: number
-  product_name: string
-  type: "addition" | "reduction"
-  quantity: number
-  notes: string | null
-  transaction_date: string // DATE type
-  created_at: string
-}
-
-// Customer Transactions table (simplified)
-export interface CustomerTransaction {
-  id: number
   user_id: number
+  customer_name: string | null
+  customer_phone: string | null
   total_price: number
+  status: "pending" | "completed" | "cancelled"
+  notes: string | null
   created_at: string
+  updated_at: string
+  users?: { full_name?: string; username?: string } // For joins
 }
 
 // Transaction Details table
@@ -157,11 +151,8 @@ export type ProductUpdate = Partial<ProductInsert>
 export type UserInsert = Omit<User, "id" | "created_at" | "updated_at" | "last_login">
 export type UserUpdate = Partial<Omit<User, "id" | "created_at" | "updated_at">>
 
-export type TransactionInsert = Omit<Transaction, "id" | "created_at">
-export type TransactionUpdate = Partial<Omit<Transaction, "id" | "product_id" | "created_at">>
-
-export type CustomerTransactionInsert = Omit<CustomerTransaction, "id" | "total_price" | "created_at">
-export type CustomerTransactionUpdate = Partial<Omit<CustomerTransaction, "id" | "created_at">>
+export type TransactionInsert = Omit<Transaction, "id" | "total_price" | "created_at" | "updated_at" | "users">
+export type TransactionUpdate = Partial<Omit<Transaction, "id" | "created_at" | "updated_at" | "users">>
 
 export type TransactionDetailInsert = Omit<TransactionDetail, "id" | "subtotal" | "created_at">
 export type TransactionDetailUpdate = Partial<
@@ -180,20 +171,8 @@ export interface AuthUser {
   is_active: boolean
 }
 
-// Database function types
-export interface CreateTransactionResponse {
-  transaction_id: number
-  product_id: number
-  product_name: string
-  type: "addition" | "reduction"
-  quantity: number
-  notes: string | null
-  transaction_date: string
-  created_at: string
-}
-
-// Customer transaction with details (for display)
-export interface CustomerTransactionWithDetails extends CustomerTransaction {
+// Transaction with details (for display)
+export interface TransactionWithDetails extends Transaction {
   details: TransactionDetail[]
   user_name?: string
 }

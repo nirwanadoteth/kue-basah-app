@@ -1,224 +1,143 @@
-import { supabase, type Transaction, type TransactionInsert } from "@/lib/supabase"
-import { ProductsAPI } from "./products"
+import {
+  supabase,
+  type Transaction,
+  type TransactionDetail,
+  type TransactionInsert,
+  type TransactionUpdate,
+  type TransactionWithDetails,
+} from "@/lib/supabase"
 
 export class TransactionsAPI {
-  // Get all transactions
-  static async getAll(): Promise<Transaction[]> {
+  // Get all transactions with details
+  static async getAll(): Promise<TransactionWithDetails[]> {
     try {
-      const { data, error } = await supabase.from("transactions").select("*").order("created_at", { ascending: false })
+      const { data: transactions, error: transactionsError } = await supabase
+        .from("transactions")
+        .select(
+          `
+          *,
+          users(full_name, username)
+        `,
+        )
+        .order("created_at", { ascending: false })
 
-      if (error) {
-        console.error("Supabase error fetching transactions:", error)
-        throw new Error(`Failed to fetch transactions: ${error.message}`)
+      if (transactionsError) {
+        console.error("Supabase error fetching transactions:", transactionsError)
+        throw new Error(`Failed to fetch transactions: ${transactionsError.message}`)
       }
 
-      return data || []
+      // Get transaction details for each transaction
+      const transactionsWithDetails = await Promise.all(
+        (transactions || []).map(async (transaction) => {
+          const { data: details, error: detailsError } = await supabase
+            .from("transaction_details")
+            .select("*")
+            .eq("transaction_id", transaction.id)
+            .order("created_at", { ascending: true })
+
+          if (detailsError) {
+            console.error("Error fetching transaction details:", detailsError)
+          }
+
+          return {
+            ...transaction,
+            details: details || [],
+            user_name: transaction.users?.full_name || transaction.users?.username || "Unknown",
+          }
+        }),
+      )
+
+      return transactionsWithDetails
     } catch (error) {
       console.error("Error in TransactionsAPI.getAll:", error)
       throw error
     }
   }
 
-  // Get transactions by product ID
-  static async getByProductId(productId: number): Promise<Transaction[]> {
+  // Get transaction by ID with details
+  static async getById(id: number): Promise<TransactionWithDetails | null> {
     try {
-      const { data, error } = await supabase
+      const { data: transaction, error: transactionError } = await supabase
         .from("transactions")
-        .select("*")
-        .eq("product_id", productId)
-        .order("created_at", { ascending: false })
+        .select(
+          `
+          *,
+          users(full_name, username)
+        `,
+        )
+        .eq("id", id)
+        .single()
 
-      if (error) {
-        console.error("Supabase error fetching product transactions:", error)
-        throw new Error(`Failed to fetch product transactions: ${error.message}`)
+      if (transactionError) {
+        if (transactionError.code === "PGRST116") {
+          return null // Transaction not found
+        }
+        console.error("Supabase error fetching transaction:", transactionError)
+        throw new Error(`Failed to fetch transaction: ${transactionError.message}`)
       }
 
-      return data || []
+      // Get transaction details
+      const { data: details, error: detailsError } = await supabase
+        .from("transaction_details")
+        .select("*")
+        .eq("transaction_id", id)
+        .order("created_at", { ascending: true })
+
+      if (detailsError) {
+        console.error("Error fetching transaction details:", detailsError)
+      }
+
+      return {
+        ...transaction,
+        details: details || [],
+        user_name: transaction.users?.full_name || transaction.users?.username || "Unknown",
+      }
     } catch (error) {
-      console.error("Error in TransactionsAPI.getByProductId:", error)
+      console.error("Error in TransactionsAPI.getById:", error)
       throw error
     }
   }
 
-  // Create new transaction and update stock
-  static async create(transaction: Omit<TransactionInsert, "product_name">): Promise<Transaction> {
+  // Create new transaction
+  static async create(transaction: TransactionInsert): Promise<Transaction> {
     try {
-      // Get product details
-      const product = await ProductsAPI.getById(transaction.product_id)
-      if (!product) {
-        throw new Error("Product not found")
+      const { data, error } = await supabase.from("transactions").insert([transaction]).select().single()
+
+      if (error) {
+        console.error("Supabase error creating transaction:", error)
+        throw new Error(`Failed to create transaction: ${error.message}`)
       }
 
-      // Ensure transaction_date is properly formatted
-      const transactionDate = transaction.transaction_date || new Date().toISOString().split("T")[0]
-
-      // Try to use the stored function first
-      const { data: functionResult, error: functionError } = await supabase.rpc(
-        "create_transaction_with_stock_update",
-        {
-          p_product_id: transaction.product_id,
-          p_product_name: product.name,
-          p_type: transaction.type,
-          p_quantity: transaction.quantity,
-          p_notes: transaction.notes || "",
-          p_transaction_date: transactionDate,
-        },
-      )
-
-      if (functionError) {
-        console.warn("Stored function not available, using manual transaction:", functionError)
-        return this.createManual(transaction, product.name)
-      }
-
-      if (functionResult && Array.isArray(functionResult) && functionResult.length > 0) {
-        return functionResult[0]
-      }
-
-      // Fallback to manual transaction
-      return this.createManual(transaction, product.name)
+      return data
     } catch (error) {
       console.error("Error in TransactionsAPI.create:", error)
       throw error
     }
   }
 
-  // Manual transaction creation (fallback)
-  private static async createManual(
-    transaction: Omit<TransactionInsert, "product_name">,
-    productName: string,
-  ): Promise<Transaction> {
+  // Update transaction
+  static async update(id: number, updates: TransactionUpdate): Promise<Transaction> {
     try {
-      // Update stock first
-      await ProductsAPI.updateStock(transaction.product_id, transaction.quantity, transaction.type)
-
-      // Ensure transaction_date is properly formatted
-      const transactionDate = transaction.transaction_date || new Date().toISOString().split("T")[0]
-
-      // Create transaction record
       const { data, error } = await supabase
         .from("transactions")
-        .insert([
-          {
-            ...transaction,
-            product_name: productName,
-            transaction_date: transactionDate,
-          },
-        ])
+        .update(updates)
+        .eq("id", id)
         .select()
         .single()
 
       if (error) {
-        console.error("Supabase error creating transaction:", error)
-
-        if (error.message && error.message.includes('relation "public.transactions" does not exist')) {
-          throw new Error("Database tables not found. Please run the setup script first.")
-        }
-
-        throw new Error(`Failed to create transaction: ${error.message}`)
+        console.error("Supabase error updating transaction:", error)
+        throw new Error(`Failed to update transaction: ${error.message}`)
       }
 
       return data
     } catch (error) {
-      console.error("Error in TransactionsAPI.createManual:", error)
+      console.error("Error in TransactionsAPI.update:", error)
       throw error
     }
   }
 
-  // Get transactions by date range
-  static async getByDateRange(startDate: string, endDate: string): Promise<Transaction[]> {
-    try {
-      const { data, error } = await supabase
-        .from("transactions")
-        .select("*")
-        .gte("transaction_date", startDate)
-        .lte("transaction_date", endDate)
-        .order("transaction_date", { ascending: false })
-
-      if (error) {
-        console.error("Supabase error fetching transactions by date:", error)
-        throw new Error(`Failed to fetch transactions by date: ${error.message}`)
-      }
-
-      return data || []
-    } catch (error) {
-      console.error("Error in TransactionsAPI.getByDateRange:", error)
-      throw error
-    }
-  }
-
-  // Get transactions by type
-  static async getByType(type: "addition" | "reduction"): Promise<Transaction[]> {
-    try {
-      const { data, error } = await supabase
-        .from("transactions")
-        .select("*")
-        .eq("type", type)
-        .order("created_at", { ascending: false })
-
-      if (error) {
-        console.error("Supabase error fetching transactions by type:", error)
-        throw new Error(`Failed to fetch transactions by type: ${error.message}`)
-      }
-
-      return data || []
-    } catch (error) {
-      console.error("Error in TransactionsAPI.getByType:", error)
-      throw error
-    }
-  }
-
-  // Search transactions
-  static async search(query: string): Promise<Transaction[]> {
-    try {
-      const { data, error } = await supabase
-        .from("transactions")
-        .select("*")
-        .or(`product_name.ilike.%${query}%,notes.ilike.%${query}%`)
-        .order("created_at", { ascending: false })
-
-      if (error) {
-        console.error("Supabase error searching transactions:", error)
-        throw new Error(`Failed to search transactions: ${error.message}`)
-      }
-
-      return data || []
-    } catch (error) {
-      console.error("Error in TransactionsAPI.search:", error)
-      throw error
-    }
-  }
-
-  // Get transaction statistics
-  static async getStats(): Promise<{
-    totalTransactions: number
-    totalAdditions: number
-    totalReductions: number
-    todayTransactions: number
-  }> {
-    try {
-      const today = new Date().toISOString().split("T")[0]
-
-      const [allTransactions, todayTransactions] = await Promise.all([
-        this.getAll(),
-        supabase.from("transactions").select("*").eq("transaction_date", today),
-      ])
-
-      const all = allTransactions || []
-      const todayData = todayTransactions.data || []
-
-      return {
-        totalTransactions: all.length,
-        totalAdditions: all.filter((t) => t.type === "addition").length,
-        totalReductions: all.filter((t) => t.type === "reduction").length,
-        todayTransactions: todayData.length,
-      }
-    } catch (error) {
-      console.error("Error in TransactionsAPI.getStats:", error)
-      throw error
-    }
-  }
-
-  // Delete transaction (admin only)
+  // Delete transaction
   static async delete(id: number): Promise<void> {
     try {
       const { error } = await supabase.from("transactions").delete().eq("id", id)
@@ -229,6 +148,206 @@ export class TransactionsAPI {
       }
     } catch (error) {
       console.error("Error in TransactionsAPI.delete:", error)
+      throw error
+    }
+  }
+
+  // Add item to transaction
+  static async addItem(transactionId: number, productId: number, quantity: number): Promise<TransactionDetail> {
+    try {
+      const { data, error } = await supabase.rpc("add_transaction_item", {
+        p_transaction_id: transactionId,
+        p_product_id: productId,
+        p_quantity: quantity,
+      })
+
+      if (error) {
+        console.error("Supabase error adding transaction item:", error)
+        throw new Error(`Failed to add item to transaction: ${error.message}`)
+      }
+
+      if (!data || data.length === 0) {
+        throw new Error("No data returned from add_transaction_item function")
+      }
+
+      // The RPC function returns a record, which we cast to TransactionDetail
+      return data[0] as unknown as TransactionDetail
+    } catch (error) {
+      console.error("Error in TransactionsAPI.addItem:", error)
+      throw error
+    }
+  }
+
+  // Remove item from transaction
+  static async removeItem(detailId: number): Promise<void> {
+    try {
+      // Get transaction ID before deleting
+      const { data: detail, error: getError } = await supabase
+        .from("transaction_details")
+        .select("transaction_id")
+        .eq("id", detailId)
+        .single()
+
+      if (getError) {
+        throw new Error(`Failed to get transaction detail: ${getError.message}`)
+      }
+
+      // Delete the item
+      const { error: deleteError } = await supabase.from("transaction_details").delete().eq("id", detailId)
+
+      if (deleteError) {
+        console.error("Supabase error removing transaction item:", deleteError)
+        throw new Error(`Failed to remove item from transaction: ${deleteError.message}`)
+      }
+
+      // Update transaction total
+      await supabase.rpc("update_transaction_total", {
+        p_transaction_id: detail.transaction_id,
+      })
+    } catch (error) {
+      console.error("Error in TransactionsAPI.removeItem:", error)
+      throw error
+    }
+  }
+
+  // Update item quantity
+  static async updateItemQuantity(detailId: number, quantity: number): Promise<TransactionDetail> {
+    try {
+      if (quantity <= 0) {
+        await this.removeItem(detailId)
+        throw new Error("Quantity set to 0, item removed.")
+      }
+
+      // Get transaction ID before updating
+      const { data: detail, error: getError } = await supabase
+        .from("transaction_details")
+        .select("transaction_id")
+        .eq("id", detailId)
+        .single()
+
+      if (getError) {
+        throw new Error(`Failed to get transaction detail: ${getError.message}`)
+      }
+
+      // Update the quantity
+      const { data, error } = await supabase
+        .from("transaction_details")
+        .update({ quantity })
+        .eq("id", detailId)
+        .select()
+        .single()
+
+      if (error) {
+        console.error("Supabase error updating transaction item:", error)
+        throw new Error(`Failed to update item quantity: ${error.message}`)
+      }
+
+      // Update transaction total
+      await supabase.rpc("update_transaction_total", {
+        p_transaction_id: detail.transaction_id,
+      })
+
+      return data
+    } catch (error) {
+      console.error("Error in TransactionsAPI.updateItemQuantity:", error)
+      throw error
+    }
+  }
+
+  // Complete transaction (reduce stock)
+  static async complete(id: number): Promise<boolean> {
+    try {
+      const { data, error } = await supabase.rpc("complete_transaction", {
+        p_transaction_id: id,
+      })
+
+      if (error) {
+        console.error("Supabase error completing transaction:", error)
+        throw new Error(`Failed to complete transaction: ${error.message}`)
+      }
+
+      return data
+    } catch (error) {
+      console.error("Error in TransactionsAPI.complete:", error)
+      throw error
+    }
+  }
+
+  // Get transaction statistics
+  static async getStats(): Promise<{
+    totalTransactions: number
+    totalRevenue: number
+    todayRevenue: number
+    averageOrderValue: number
+  }> {
+    try {
+      const today = new Date().toISOString().split("T")[0]
+
+      const { data: all, error: allError } = await supabase.from("transactions").select("total_price")
+      if (allError) throw new Error(`Failed to fetch all transactions: ${allError.message}`)
+
+      const { data: todayData, error: todayError } = await supabase
+        .from("transactions")
+        .select("total_price")
+        .gte("created_at", `${today}T00:00:00Z`)
+      if (todayError) throw new Error(`Failed to fetch today's transactions: ${todayError.message}`)
+
+      const totalRevenue = (all || []).reduce((sum, t) => sum + (t.total_price || 0), 0)
+      const todayRevenue = (todayData || []).reduce((sum, t) => sum + (t.total_price || 0), 0)
+      const totalTransactions = (all || []).length
+
+      return {
+        totalTransactions,
+        totalRevenue,
+        todayRevenue,
+        averageOrderValue: totalTransactions > 0 ? totalRevenue / totalTransactions : 0,
+      }
+    } catch (error) {
+      console.error("Error in TransactionsAPI.getStats:", error)
+      throw error
+    }
+  }
+
+  // Search transactions by date range
+  static async getByDateRange(startDate: string, endDate: string): Promise<TransactionWithDetails[]> {
+    try {
+      const { data: transactions, error } = await supabase
+        .from("transactions")
+        .select(
+          `
+          *,
+          users(full_name, username)
+        `,
+        )
+        .gte("created_at", startDate)
+        .lte("created_at", endDate)
+        .order("created_at", { ascending: false })
+
+      if (error) {
+        console.error("Supabase error fetching transactions by date range:", error)
+        throw new Error(`Failed to fetch transactions by date range: ${error.message}`)
+      }
+
+      // Get transaction details for each transaction
+      const transactionsWithDetails = await Promise.all(
+        (transactions || []).map(async (transaction) => {
+          const { data: details } = await supabase
+            .from("transaction_details")
+            .select("*")
+            .eq("transaction_id", transaction.id)
+            .order("created_at", { ascending: true })
+
+          return {
+            ...transaction,
+            details: details || [],
+            user_name: transaction.users?.full_name || transaction.users?.username || "Unknown",
+          }
+        }),
+      )
+
+      return transactionsWithDetails
+    } catch (error) {
+      console.error("Error in TransactionsAPI.getByDateRange:", error)
       throw error
     }
   }

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { CustomerTransactionsAPI } from "@/lib/api/customer-transactions"
+import { TransactionsAPI } from "@/lib/api/transactions"
 import { CreateTransactionModal } from "@/components/create-transaction-modal"
 import { TransactionDetailsModal } from "@/components/transaction-details-modal"
 import { TableSkeleton } from "@/components/loading-skeleton"
@@ -20,18 +20,18 @@ import {
   Calendar,
   DollarSign,
 } from "lucide-react"
-import type { CustomerTransactionWithDetails } from "@/lib/supabase"
+import type { TransactionWithDetails } from "@/lib/supabase"
 import { formatDate, formatCurrency } from "@/lib/utils"
 import { DatabaseSetupBanner } from "@/components/database-setup-banner"
 import { toast } from "sonner"
 
-export default function CustomerTransactions() {
+export default function TransactionsPage() {
   const [isInitialLoading, setIsInitialLoading] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [dateFilter, setDateFilter] = useState("all")
-  const [transactions, setTransactions] = useState<CustomerTransactionWithDetails[]>([])
-  const [filteredTransactions, setFilteredTransactions] = useState<CustomerTransactionWithDetails[]>([])
+  const [transactions, setTransactions] = useState<TransactionWithDetails[]>([])
+  const [filteredTransactions, setFilteredTransactions] = useState<TransactionWithDetails[]>([])
   const [stats, setStats] = useState({
     totalTransactions: 0,
     totalRevenue: 0,
@@ -64,7 +64,7 @@ export default function CustomerTransactions() {
 
   const loadTransactions = async () => {
     try {
-      const transactionsData = await CustomerTransactionsAPI.getAll()
+      const transactionsData = await TransactionsAPI.getAll()
       setTransactions(transactionsData)
     } catch (error) {
       console.error("Error loading transactions:", error)
@@ -74,7 +74,7 @@ export default function CustomerTransactions() {
 
   const loadStats = async () => {
     try {
-      const statsData = await CustomerTransactionsAPI.getStats()
+      const statsData = await TransactionsAPI.getStats()
       setStats(statsData)
     } catch (error) {
       console.error("Error loading stats:", error)
@@ -85,12 +85,14 @@ export default function CustomerTransactions() {
   const filterTransactions = async () => {
     let filtered = transactions
 
-    // Apply search filter by transaction ID or admin name
+    // Apply search filter by transaction ID, customer name, or admin name
     if (searchTerm && searchTerm.trim()) {
       const searchLower = searchTerm.toLowerCase()
       filtered = transactions.filter(
         (transaction) =>
-          transaction.id.toString().includes(searchLower) || transaction.user_name?.toLowerCase().includes(searchLower),
+          transaction.id.toString().includes(searchLower) ||
+          transaction.customer_name?.toLowerCase().includes(searchLower) ||
+          transaction.user_name?.toLowerCase().includes(searchLower),
       )
     }
 
@@ -150,6 +152,7 @@ export default function CustomerTransactions() {
   const handleTransactionCreated = (transactionId: number) => {
     loadTransactions()
     loadStats()
+    // Optionally, you could open the details modal for the new transaction
   }
 
   const handleTransactionUpdated = () => {
@@ -203,11 +206,11 @@ export default function CustomerTransactions() {
         <div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent flex items-center gap-2">
             <ShoppingCart className="h-8 w-8 text-pink-500" />
-            Transaksi Penjualan
+            Pesanan & Transaksi
           </h1>
           <p className="text-gray-600 mt-1 flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-purple-400" />
-            Kelola transaksi penjualan dan pembelian pelanggan
+            Kelola pesanan pelanggan dan transaksi penjualan cepat
           </p>
         </div>
 
@@ -226,10 +229,11 @@ export default function CustomerTransactions() {
             trigger={
               <Button className="cotton-candy-button from-green-400 to-emerald-400 rounded-full px-6">
                 <Plus className="h-4 w-4 mr-2" />
-                Buat Transaksi
+                Buat Pesanan
               </Button>
             }
             onTransactionCreated={handleTransactionCreated}
+            isOrder={true}
           />
         </div>
       </div>
@@ -260,7 +264,7 @@ export default function CustomerTransactions() {
           <CardContent className="p-4 text-center">
             <div className="flex items-center justify-center gap-2 mb-2">
               <Calendar className="h-5 w-5 text-indigo-500" />
-              <span className="text-sm font-medium text-gray-600">Hari Ini</span>
+              <span className="text-sm font-medium text-gray-600">Pendapatan Hari Ini</span>
             </div>
             <div className="text-lg font-bold text-indigo-500">{formatCurrency(stats.todayRevenue)}</div>
           </CardContent>
@@ -270,7 +274,7 @@ export default function CustomerTransactions() {
           <CardContent className="p-4 text-center">
             <div className="flex items-center justify-center gap-2 mb-2">
               <DollarSign className="h-5 w-5 text-green-500" />
-              <span className="text-sm font-medium text-gray-600">Rata-rata</span>
+              <span className="text-sm font-medium text-gray-600">Rata-rata/Pesanan</span>
             </div>
             <div className="text-lg font-bold text-green-500">{formatCurrency(stats.averageOrderValue)}</div>
           </CardContent>
@@ -282,7 +286,7 @@ export default function CustomerTransactions() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
-            placeholder="Cari transaksi (ID atau admin)..."
+            placeholder="Cari (ID, nama pelanggan, atau admin)..."
             className="pl-10 border-pink-200 focus:border-pink-400 rounded-full"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -292,12 +296,12 @@ export default function CustomerTransactions() {
         <select
           value={dateFilter}
           onChange={(e) => setDateFilter(e.target.value)}
-          className="px-4 py-2 border border-pink-200 rounded-full focus:border-pink-400 focus:outline-none"
+          className="px-4 py-2 border border-pink-200 rounded-full focus:border-pink-400 focus:outline-none bg-white"
         >
           <option value="all">Semua Tanggal</option>
           <option value="today">Hari Ini</option>
-          <option value="week">Minggu Ini</option>
-          <option value="month">Bulan Ini</option>
+          <option value="week">7 Hari Terakhir</option>
+          <option value="month">30 Hari Terakhir</option>
         </select>
       </div>
 
@@ -309,6 +313,7 @@ export default function CustomerTransactions() {
               <thead className="bg-gradient-to-r from-pink-50 to-purple-50">
                 <tr>
                   <th className="text-left py-4 px-6 font-semibold text-gray-700">ID</th>
+                  <th className="text-left py-4 px-6 font-semibold text-gray-700">Pelanggan</th>
                   <th className="text-left py-4 px-6 font-semibold text-gray-700">Admin</th>
                   <th className="text-left py-4 px-6 font-semibold text-gray-700">Items</th>
                   <th className="text-left py-4 px-6 font-semibold text-gray-700">Total</th>
@@ -319,7 +324,7 @@ export default function CustomerTransactions() {
               <tbody>
                 {filteredTransactions.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-12 text-center text-gray-500">
+                    <td colSpan={7} className="py-12 text-center text-gray-500">
                       <ShoppingCart className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                       {searchTerm || dateFilter !== "all"
                         ? "Tidak ada transaksi yang ditemukan"
@@ -333,6 +338,7 @@ export default function CustomerTransactions() {
                       className="border-b border-pink-50 hover:bg-gradient-to-r hover:from-pink-25 hover:to-purple-25 transition-all duration-200"
                     >
                       <td className="py-4 px-6 font-medium text-gray-900">#{transaction.id}</td>
+                      <td className="py-4 px-6 font-semibold text-gray-800">{transaction.customer_name || "-"}</td>
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-2">
                           <div className="w-8 h-8 rounded-full bg-gradient-to-r from-pink-200 to-purple-200 flex items-center justify-center">
@@ -374,9 +380,9 @@ export default function CustomerTransactions() {
       <div className="text-center text-sm text-gray-500 bg-blue-50 border border-blue-200 rounded-2xl p-4">
         <div className="flex items-center justify-center gap-2">
           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-          <span>Sistem Transaksi Penjualan Aktif</span>
+          <span>Sistem Pesanan & Transaksi Aktif</span>
         </div>
-        <p className="mt-2 text-xs">Kelola transaksi penjualan dengan mudah dan pantau pendapatan secara real-time</p>
+        <p className="mt-2 text-xs">Kelola semua jenis transaksi dengan mudah dan pantau pendapatan secara real-time</p>
       </div>
     </div>
   )

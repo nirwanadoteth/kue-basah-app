@@ -6,12 +6,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { CustomerTransactionsAPI } from "@/lib/api/customer-transactions"
+import { TransactionsAPI } from "@/lib/api/transactions"
 import { useInventoryStore } from "@/lib/store-supabase"
 import { Plus, Minus, Trash2, ShoppingCart, CheckCircle, Package } from "lucide-react"
 import { formatCurrency, formatDate } from "@/lib/utils"
 import { toast } from "sonner"
-import type { CustomerTransactionWithDetails } from "@/lib/supabase"
+import type { TransactionWithDetails } from "@/lib/supabase"
 
 interface TransactionDetailsModalProps {
   trigger: React.ReactNode
@@ -25,7 +25,7 @@ export function TransactionDetailsModal({
   onTransactionUpdated,
 }: TransactionDetailsModalProps) {
   const [open, setOpen] = useState(false)
-  const [transaction, setTransaction] = useState<CustomerTransactionWithDetails | null>(null)
+  const [transaction, setTransaction] = useState<TransactionWithDetails | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [selectedProductId, setSelectedProductId] = useState<string>("")
   const [quantity, setQuantity] = useState<string>("1")
@@ -42,7 +42,7 @@ export function TransactionDetailsModal({
   const loadTransaction = async () => {
     try {
       setIsLoading(true)
-      const transactionData = await CustomerTransactionsAPI.getById(transactionId)
+      const transactionData = await TransactionsAPI.getById(transactionId)
       setTransaction(transactionData)
     } catch (error) {
       console.error("Error loading transaction:", error)
@@ -66,7 +66,7 @@ export function TransactionDetailsModal({
 
     try {
       setIsLoading(true)
-      await CustomerTransactionsAPI.addItem(transactionId, Number.parseInt(selectedProductId), qty)
+      await TransactionsAPI.addItem(transactionId, Number.parseInt(selectedProductId), qty)
       await loadTransaction()
       setSelectedProductId("")
       setQuantity("1")
@@ -89,7 +89,7 @@ export function TransactionDetailsModal({
 
     try {
       setIsLoading(true)
-      await CustomerTransactionsAPI.updateItemQuantity(detailId, newQuantity)
+      await TransactionsAPI.updateItemQuantity(detailId, newQuantity)
       await loadTransaction()
       toast.success("Jumlah berhasil diperbarui")
       onTransactionUpdated?.()
@@ -109,7 +109,7 @@ export function TransactionDetailsModal({
 
     try {
       setIsLoading(true)
-      await CustomerTransactionsAPI.removeItem(detailId)
+      await TransactionsAPI.removeItem(detailId)
       await loadTransaction()
       toast.success("Item berhasil dihapus")
       onTransactionUpdated?.()
@@ -134,7 +134,7 @@ export function TransactionDetailsModal({
 
     try {
       setIsLoading(true)
-      await CustomerTransactionsAPI.complete(transactionId)
+      await TransactionsAPI.complete(transactionId)
       await loadTransaction()
       toast.success("Transaksi berhasil diselesaikan!")
       onTransactionUpdated?.()
