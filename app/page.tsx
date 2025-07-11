@@ -169,7 +169,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="p-6 space-y-8 animate-fade-in">
+    <div className="p-4 sm:p-6 space-y-8 animate-fade-in">
       {/* Error Banner */}
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-2xl p-4 flex items-center justify-between">
@@ -194,10 +194,10 @@ export default function Dashboard() {
 
       {/* Header */}
       <div className="text-center space-y-2">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent">
+        <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent">
           Dashboard
         </h1>
-        <div className="flex justify-center gap-3">
+        <div className="flex flex-col sm:flex-row justify-center gap-3">
           <Button
             onClick={handleRefresh}
             size="sm"
@@ -300,7 +300,7 @@ export default function Dashboard() {
               />
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto md:overflow-x-visible">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-pink-100">

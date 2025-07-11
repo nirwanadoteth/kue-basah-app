@@ -1,13 +1,13 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { TransactionsAPI } from "@/lib/api/transactions"
-import { CreateTransactionModal } from "@/components/create-transaction-modal"
-import { TransactionDetailsModal } from "@/components/transaction-details-modal"
-import { TableSkeleton } from "@/components/loading-skeleton"
+import { useEffect, useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { TransactionsAPI } from "@/lib/api/transactions";
+import { CreateTransactionModal } from "@/components/create-transaction-modal";
+import { TransactionDetailsModal } from "@/components/transaction-details-modal";
+import { TableSkeleton } from "@/components/loading-skeleton";
 import {
   Search,
   ShoppingCart,
@@ -19,146 +19,155 @@ import {
   User,
   Calendar,
   DollarSign,
-} from "lucide-react"
-import type { TransactionWithDetails } from "@/lib/supabase"
-import { formatDate, formatCurrency } from "@/lib/utils"
-import { DatabaseSetupBanner } from "@/components/database-setup-banner"
-import { toast } from "sonner"
+} from "lucide-react";
+import type { TransactionWithDetails } from "@/lib/supabase";
+import { formatDate, formatCurrency } from "@/lib/utils";
+import { DatabaseSetupBanner } from "@/components/database-setup-banner";
+import { toast } from "sonner";
 
 export default function TransactionsPage() {
-  const [isInitialLoading, setIsInitialLoading] = useState(true)
-  const [isLoading, setIsLoading] = useState(false)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [dateFilter, setDateFilter] = useState("all")
-  const [transactions, setTransactions] = useState<TransactionWithDetails[]>([])
-  const [filteredTransactions, setFilteredTransactions] = useState<TransactionWithDetails[]>([])
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [dateFilter, setDateFilter] = useState("all");
+  const [transactions, setTransactions] = useState<TransactionWithDetails[]>(
+    []
+  );
+  const [filteredTransactions, setFilteredTransactions] = useState<
+    TransactionWithDetails[]
+  >([]);
   const [stats, setStats] = useState({
     totalTransactions: 0,
     totalRevenue: 0,
     todayRevenue: 0,
     averageOrderValue: 0,
-  })
-  const [error, setError] = useState<string | null>(null)
-  const [showDetailsModalForTransactionId, setShowDetailsModalForTransactionId] = useState<number | null>(null)
+  });
+  const [error, setError] = useState<string | null>(null);
+  const [
+    showDetailsModalForTransactionId,
+    setShowDetailsModalForTransactionId,
+  ] = useState<number | null>(null);
 
   useEffect(() => {
-    initializeData()
-  }, [])
+    initializeData();
+  }, []);
 
   useEffect(() => {
-    filterTransactions()
-  }, [searchTerm, dateFilter, transactions])
+    filterTransactions();
+  }, [searchTerm, dateFilter, transactions]);
 
   const initializeData = async () => {
     try {
-      setIsInitialLoading(true)
-      setError(null)
-      await Promise.all([loadTransactions(), loadStats()])
+      setIsInitialLoading(true);
+      setError(null);
+      await Promise.all([loadTransactions(), loadStats()]);
     } catch (error) {
-      console.error("Failed to initialize data:", error)
-      const errorMessage = error instanceof Error ? error.message : "Gagal memuat data"
-      setError(errorMessage)
+      console.error("Failed to initialize data:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Gagal memuat data";
+      setError(errorMessage);
     } finally {
-      setIsInitialLoading(false)
+      setIsInitialLoading(false);
     }
-  }
+  };
 
   const loadTransactions = async () => {
     try {
-      const transactionsData = await TransactionsAPI.getAll()
-      setTransactions(transactionsData)
+      const transactionsData = await TransactionsAPI.getAll();
+      setTransactions(transactionsData);
     } catch (error) {
-      console.error("Error loading transactions:", error)
-      throw error
+      console.error("Error loading transactions:", error);
+      throw error;
     }
-  }
+  };
 
   const loadStats = async () => {
     try {
-      const statsData = await TransactionsAPI.getStats()
-      setStats(statsData)
+      const statsData = await TransactionsAPI.getStats();
+      setStats(statsData);
     } catch (error) {
-      console.error("Error loading stats:", error)
+      console.error("Error loading stats:", error);
       // Don't throw here, stats are not critical
     }
-  }
+  };
 
   const filterTransactions = async () => {
-    let filtered = transactions
+    let filtered = transactions;
 
     // Apply search filter by transaction ID, or admin name
     if (searchTerm && searchTerm.trim()) {
-      const searchLower = searchTerm.toLowerCase()
+      const searchLower = searchTerm.toLowerCase();
       filtered = transactions.filter(
         (transaction) =>
           transaction.id.toString().includes(searchLower) ||
-          transaction.users?.username?.toLowerCase().includes(searchLower),
-      )
+          transaction.users?.username?.toLowerCase().includes(searchLower)
+      );
     }
 
     // Apply date filter
     if (dateFilter !== "all") {
-      const today = new Date()
-      const filterDate = new Date()
+      const today = new Date();
+      const filterDate = new Date();
 
       try {
         switch (dateFilter) {
           case "today":
-            filterDate.setHours(0, 0, 0, 0)
+            filterDate.setHours(0, 0, 0, 0);
             filtered = filtered.filter((t: TransactionWithDetails) => {
-              const transactionDate = new Date(t.created_at)
-              return transactionDate >= filterDate
-            })
-            break
+              const transactionDate = new Date(t.created_at);
+              return transactionDate >= filterDate;
+            });
+            break;
           case "week":
-            filterDate.setDate(today.getDate() - 7)
+            filterDate.setDate(today.getDate() - 7);
             filtered = filtered.filter((t: TransactionWithDetails) => {
-              const transactionDate = new Date(t.created_at)
-              return transactionDate >= filterDate
-            })
-            break
+              const transactionDate = new Date(t.created_at);
+              return transactionDate >= filterDate;
+            });
+            break;
           case "month":
-            filterDate.setMonth(today.getMonth() - 1)
+            filterDate.setMonth(today.getMonth() - 1);
             filtered = filtered.filter((t: TransactionWithDetails) => {
-              const transactionDate = new Date(t.created_at)
-              return transactionDate >= filterDate
-            })
-            break
+              const transactionDate = new Date(t.created_at);
+              return transactionDate >= filterDate;
+            });
+            break;
         }
       } catch (error) {
-        console.error("Date filtering error:", error)
+        console.error("Date filtering error:", error);
       }
     }
 
-    setFilteredTransactions(filtered)
-  }
+    setFilteredTransactions(filtered);
+  };
 
   const handleRefresh = async () => {
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
     try {
-      await Promise.all([loadTransactions(), loadStats()])
-      toast.success("Data berhasil diperbarui")
+      await Promise.all([loadTransactions(), loadStats()]);
+      toast.success("Data berhasil diperbarui");
     } catch (error) {
-      console.error("Failed to refresh data:", error)
-      const errorMessage = error instanceof Error ? error.message : "Gagal memperbarui data"
-      setError(errorMessage)
-      toast.error(errorMessage)
+      console.error("Failed to refresh data:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Gagal memperbarui data";
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleTransactionCreated = (transactionId: number) => {
-    loadTransactions()
-    loadStats()
-    setShowDetailsModalForTransactionId(transactionId)
-  }
+    loadTransactions();
+    loadStats();
+    setShowDetailsModalForTransactionId(transactionId);
+  };
 
   const handleTransactionUpdated = () => {
-    loadTransactions()
-    loadStats()
-  }
+    loadTransactions();
+    loadStats();
+  };
 
   if (isInitialLoading) {
     return (
@@ -169,12 +178,15 @@ export default function TransactionsPage() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-24 bg-gradient-to-r from-pink-100 to-purple-100 rounded-2xl animate-pulse" />
+            <div
+              key={i}
+              className="h-24 bg-gradient-to-r from-pink-100 to-purple-100 rounded-2xl animate-pulse"
+            />
           ))}
         </div>
         <TableSkeleton />
       </div>
-    )
+    );
   }
 
   return (
@@ -221,7 +233,9 @@ export default function TransactionsPage() {
             className="border-pink-200 text-pink-600 hover:bg-pink-50 rounded-full px-4 bg-transparent"
             disabled={isLoading}
           >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
+            <RefreshCw
+              className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
+            />
             Refresh
           </Button>
 
@@ -244,9 +258,13 @@ export default function TransactionsPage() {
           <CardContent className="p-4 text-center">
             <div className="flex items-center justify-center gap-2 mb-2">
               <ShoppingCart className="h-5 w-5 text-blue-500" />
-              <span className="text-sm font-medium text-gray-600">Total Transaksi</span>
+              <span className="text-sm font-medium text-gray-600">
+                Total Transaksi
+              </span>
             </div>
-            <div className="text-2xl font-bold text-blue-500">{stats.totalTransactions}</div>
+            <div className="text-2xl font-bold text-blue-500">
+              {stats.totalTransactions}
+            </div>
           </CardContent>
         </Card>
 
@@ -254,9 +272,13 @@ export default function TransactionsPage() {
           <CardContent className="p-4 text-center">
             <div className="flex items-center justify-center gap-2 mb-2">
               <TrendingUp className="h-5 w-5 text-purple-500" />
-              <span className="text-sm font-medium text-gray-600">Total Pendapatan</span>
+              <span className="text-sm font-medium text-gray-600">
+                Total Pendapatan
+              </span>
             </div>
-            <div className="text-lg font-bold text-purple-500">{formatCurrency(stats.totalRevenue)}</div>
+            <div className="text-lg font-bold text-purple-500">
+              {formatCurrency(stats.totalRevenue)}
+            </div>
           </CardContent>
         </Card>
 
@@ -264,9 +286,13 @@ export default function TransactionsPage() {
           <CardContent className="p-4 text-center">
             <div className="flex items-center justify-center gap-2 mb-2">
               <Calendar className="h-5 w-5 text-indigo-500" />
-              <span className="text-sm font-medium text-gray-600">Pendapatan Hari Ini</span>
+              <span className="text-sm font-medium text-gray-600">
+                Pendapatan Hari Ini
+              </span>
             </div>
-            <div className="text-lg font-bold text-indigo-500">{formatCurrency(stats.todayRevenue)}</div>
+            <div className="text-lg font-bold text-indigo-500">
+              {formatCurrency(stats.todayRevenue)}
+            </div>
           </CardContent>
         </Card>
 
@@ -274,9 +300,13 @@ export default function TransactionsPage() {
           <CardContent className="p-4 text-center">
             <div className="flex items-center justify-center gap-2 mb-2">
               <DollarSign className="h-5 w-5 text-green-500" />
-              <span className="text-sm font-medium text-gray-600">Rata-rata/Pesanan</span>
+              <span className="text-sm font-medium text-gray-600">
+                Rata-rata/Pesanan
+              </span>
             </div>
-            <div className="text-lg font-bold text-green-500">{formatCurrency(stats.averageOrderValue)}</div>
+            <div className="text-lg font-bold text-green-500">
+              {formatCurrency(stats.averageOrderValue)}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -286,7 +316,7 @@ export default function TransactionsPage() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
-            placeholder="Cari (ID, nama pelanggan, atau admin)..."
+            placeholder="Cari (ID, nama admin)..."
             className="pl-10 border-pink-200 focus:border-pink-400 rounded-full"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -312,13 +342,24 @@ export default function TransactionsPage() {
             <table className="w-full">
               <thead className="bg-gradient-to-r from-pink-50 to-purple-50">
                 <tr>
-                  <th className="text-left py-4 px-6 font-semibold text-gray-700">ID</th>
-                  <th className="text-left py-4 px-6 font-semibold text-gray-700">Pelanggan</th>
-                  <th className="text-left py-4 px-6 font-semibold text-gray-700">Admin</th>
-                  <th className="text-left py-4 px-6 font-semibold text-gray-700">Items</th>
-                  <th className="text-left py-4 px-6 font-semibold text-gray-700">Total</th>
-                  <th className="text-left py-4 px-6 font-semibold text-gray-700">Tanggal</th>
-                  <th className="text-left py-4 px-6 font-semibold text-gray-700">Aksi</th>
+                  <th className="text-left py-4 px-6 font-semibold text-gray-700">
+                    ID
+                  </th>
+                  <th className="text-left py-4 px-6 font-semibold text-gray-700">
+                    Admin
+                  </th>
+                  <th className="text-left py-4 px-6 font-semibold text-gray-700">
+                    Items
+                  </th>
+                  <th className="text-left py-4 px-6 font-semibold text-gray-700">
+                    Total
+                  </th>
+                  <th className="text-left py-4 px-6 font-semibold text-gray-700">
+                    Tanggal
+                  </th>
+                  <th className="text-left py-4 px-6 font-semibold text-gray-700">
+                    Aksi
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -337,20 +378,30 @@ export default function TransactionsPage() {
                       key={transaction.id}
                       className="border-b border-pink-50 hover:bg-gradient-to-r hover:from-pink-25 hover:to-purple-25 transition-all duration-200"
                     >
-                      <td className="py-4 px-6 font-medium text-gray-900">#{transaction.id}</td>
+                      <td className="py-4 px-6 font-medium text-gray-900">
+                        #{transaction.id}
+                      </td>
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-2">
                           <div className="w-8 h-8 rounded-full bg-gradient-to-r from-pink-200 to-purple-200 flex items-center justify-center">
                             <User className="h-4 w-4 text-pink-600" />
                           </div>
-                          <span className="font-semibold text-gray-900">{transaction.users?.username}</span>
+                          <span className="font-semibold text-gray-900">
+                            {transaction.users?.username}
+                          </span>
                         </div>
                       </td>
-                      <td className="py-4 px-6 text-gray-600">{transaction.details.length} item</td>
-                      <td className="py-4 px-6">
-                        <div className="font-bold text-green-600">{formatCurrency(transaction.total_price)}</div>
+                      <td className="py-4 px-6 text-gray-600">
+                        {transaction.details.length} item
                       </td>
-                      <td className="py-4 px-6 text-gray-600">{formatDate(transaction.created_at)}</td>
+                      <td className="py-4 px-6">
+                        <div className="font-bold text-green-600">
+                          {formatCurrency(transaction.total_price)}
+                        </div>
+                      </td>
+                      <td className="py-4 px-6 text-gray-600">
+                        {formatDate(transaction.created_at)}
+                      </td>
                       <td className="py-4 px-6">
                         <TransactionDetailsModal
                           trigger={
@@ -381,19 +432,22 @@ export default function TransactionsPage() {
           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
           <span>Sistem Pesanan & Transaksi Aktif</span>
         </div>
-        <p className="mt-2 text-xs">Kelola semua jenis transaksi dengan mudah dan pantau pendapatan secara real-time</p>
+        <p className="mt-2 text-xs">
+          Kelola semua jenis transaksi dengan mudah dan pantau pendapatan secara
+          real-time
+        </p>
       </div>
 
       {showDetailsModalForTransactionId && (
         <TransactionDetailsModal
           transactionId={showDetailsModalForTransactionId}
           onTransactionUpdated={() => {
-            handleTransactionUpdated()
-            setShowDetailsModalForTransactionId(null) // Close after update
+            handleTransactionUpdated();
+            setShowDetailsModalForTransactionId(null); // Close after update
           }}
           trigger={<div className="hidden" />}
         />
       )}
     </div>
-  )
+  );
 }
