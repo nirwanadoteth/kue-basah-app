@@ -1,25 +1,34 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { useInventoryStore } from "@/lib/store-supabase"
-import { AddProductModal } from "@/components/add-product-modal"
-import { DeleteProductModal } from "@/components/delete-product-modal"
-import { EditProductModal } from "@/components/edit-product-modal"
-import { TableSkeleton } from "@/components/loading-skeleton"
-import { Search, Plus, Edit, Trash2, Package, Sparkles, RefreshCw, Minus } from "lucide-react"
-import type { Product } from "@/lib/supabase"
-import { formatCurrency } from "@/lib/utils"
-import { DatabaseSetupBanner } from "@/components/database-setup-banner"
+import { useEffect, useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useInventoryStore } from "@/lib/store-supabase";
+import { AddProductModal } from "@/components/add-product-modal";
+import { DeleteProductModal } from "@/components/delete-product-modal";
+import { EditProductModal } from "@/components/edit-product-modal";
+import { TableSkeleton } from "@/components/loading-skeleton";
+import {
+  Search,
+  Plus,
+  Edit,
+  Trash2,
+  Package,
+  Sparkles,
+  RefreshCw,
+  Minus,
+} from "lucide-react";
+import type { Product } from "@/lib/supabase";
+import { formatCurrency } from "@/lib/utils";
+import { DatabaseSetupBanner } from "@/components/database-setup-banner";
 
 export default function InventoryManagement() {
-  const [isInitialLoading, setIsInitialLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
 
-  const { 
+  const {
     products,
     isLoading,
     error,
@@ -27,63 +36,73 @@ export default function InventoryManagement() {
     deleteProduct,
     clearError,
     fetchProducts,
-    searchProducts 
-  } = useInventoryStore()
+    searchProducts,
+  } = useInventoryStore();
 
   useEffect(() => {
     const initializeData = async () => {
       try {
-        await fetchProducts()
+        await fetchProducts();
       } catch (error) {
-        console.error("Failed to initialize data:", error)
+        console.error("Failed to initialize data:", error);
       } finally {
-        setIsInitialLoading(false)
+        setIsInitialLoading(false);
       }
-    }
+    };
 
-    initializeData()
-  }, [fetchProducts])
+    initializeData();
+  }, [fetchProducts]);
 
   useEffect(() => {
     const filterProducts = async () => {
       if (searchTerm.trim()) {
         try {
-          const filtered = await searchProducts(searchTerm)
-          setFilteredProducts(filtered)
+          const filtered = await searchProducts(searchTerm);
+          setFilteredProducts(filtered);
         } catch (error) {
-          console.error("Search error:", error)
-          setFilteredProducts(products)
+          console.error("Search error:", error);
+          setFilteredProducts(products);
         }
       } else {
-        setFilteredProducts(products)
+        setFilteredProducts(products);
       }
-    }
+    };
 
-    filterProducts()
-  }, [searchTerm, products, searchProducts])
+    filterProducts();
+  }, [searchTerm, products, searchProducts]);
 
-  const handleDeleteProduct = async (productId: number, productName: string) => {
-    if (window.confirm(`Apakah Anda yakin ingin menghapus produk "${productName}"?`)) {
+  const handleDeleteProduct = async (
+    productId: number,
+    productName: string
+  ) => {
+    if (
+      window.confirm(
+        `Apakah Anda yakin ingin menghapus produk "${productName}"?`
+      )
+    ) {
       try {
-        await deleteProduct(productId)
+        await deleteProduct(productId);
       } catch (error) {
-        console.error("Error deleting product:", error)
+        console.error("Error deleting product:", error);
       }
     }
-  }
+  };
 
-  const handleUpdateStock = async (productId: number, type: string) => {
-    await updateStock(productId, 1, type)
-  }
+  const handleUpdateStock = async (
+    productId: number,
+    type: "addition" | "reduction"
+  ) => {
+    await updateStock(productId, 1, type);
+  };
 
   const handleRefresh = async () => {
-    clearError()
+    clearError();
     try {
-      await fetchProducts()
+      await fetchProducts();
     } catch (error) {
-      console.error("Failed to refresh data:", error)
+      console.error("Failed to refresh data:", error);
     }
-  }
+  };
 
   if (isInitialLoading) {
     return (
@@ -97,7 +116,7 @@ export default function InventoryManagement() {
         </div>
         <TableSkeleton />
       </div>
-    )
+    );
   }
 
   return (
@@ -154,7 +173,9 @@ export default function InventoryManagement() {
             className="border-pink-200 text-pink-600 hover:bg-pink-50 rounded-full px-4 bg-transparent"
             disabled={isLoading}
           >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
+            <RefreshCw
+              className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
+            />
             Refresh
           </Button>
 
@@ -173,14 +194,19 @@ export default function InventoryManagement() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="cotton-candy-card rounded-2xl border-0 p-4">
           <div className="text-center">
-            <div className="text-2xl font-bold text-pink-500">{filteredProducts.length}</div>
+            <div className="text-2xl font-bold text-pink-500">
+              {filteredProducts.length}
+            </div>
             <div className="text-sm text-gray-600">Total Produk</div>
           </div>
         </Card>
         <Card className="cotton-candy-card rounded-2xl border-0 p-4">
           <div className="text-center">
             <div className="text-2xl font-bold text-purple-500">
-              {filteredProducts.reduce((sum, p) => sum + (p?.current_stock || 0), 0)}
+              {filteredProducts.reduce(
+                (sum, p) => sum + (p?.current_stock || 0),
+                0
+              )}
             </div>
             <div className="text-sm text-gray-600">Total Stok</div>
           </div>
@@ -188,7 +214,12 @@ export default function InventoryManagement() {
         <Card className="cotton-candy-card rounded-2xl border-0 p-4">
           <div className="text-center">
             <div className="text-lg font-bold text-indigo-500">
-              {formatCurrency(filteredProducts.reduce((sum, p) => sum + (p?.total_value || 0), 0))}
+              {formatCurrency(
+                filteredProducts.reduce(
+                  (sum, p) => sum + (p?.total_value || 0),
+                  0
+                )
+              )}
             </div>
             <div className="text-sm text-gray-600">Total Nilai</div>
           </div>
@@ -202,11 +233,21 @@ export default function InventoryManagement() {
             <table className="w-full">
               <thead className="bg-gradient-to-r from-pink-50 to-purple-50">
                 <tr>
-                  <th className="text-left py-4 px-6 font-semibold text-gray-700">Produk</th>
-                  <th className="text-left py-4 px-6 font-semibold text-gray-700">Stok</th>
-                  <th className="text-left py-4 px-6 font-semibold text-gray-700">Harga</th>
-                  <th className="text-left py-4 px-6 font-semibold text-gray-700">Total Nilai</th>
-                  <th className="text-left py-4 px-6 font-semibold text-gray-700">Aksi</th>
+                  <th className="text-left py-4 px-6 font-semibold text-gray-700">
+                    Produk
+                  </th>
+                  <th className="text-left py-4 px-6 font-semibold text-gray-700">
+                    Stok
+                  </th>
+                  <th className="text-left py-4 px-6 font-semibold text-gray-700">
+                    Harga
+                  </th>
+                  <th className="text-left py-4 px-6 font-semibold text-gray-700">
+                    Total Nilai
+                  </th>
+                  <th className="text-left py-4 px-6 font-semibold text-gray-700">
+                    Aksi
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -216,7 +257,9 @@ export default function InventoryManagement() {
                       <Package className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                       {searchTerm ? (
                         <div>
-                          <p className="mb-4">Tidak ada produk yang ditemukan untuk "{searchTerm}"</p>
+                          <p className="mb-4">
+                            Tidak ada produk yang ditemukan untuk "{searchTerm}"
+                          </p>
                           <AddProductModal
                             trigger={
                               <Button className="cotton-candy-button from-green-400 to-emerald-400 rounded-full px-6">
@@ -228,7 +271,9 @@ export default function InventoryManagement() {
                         </div>
                       ) : (
                         <div>
-                          <p className="mb-4">Belum ada produk. Tambahkan produk pertama Anda!</p>
+                          <p className="mb-4">
+                            Belum ada produk. Tambahkan produk pertama Anda!
+                          </p>
                           <AddProductModal
                             trigger={
                               <Button className="cotton-candy-button from-green-400 to-emerald-400 rounded-full px-6">
@@ -245,7 +290,7 @@ export default function InventoryManagement() {
                   filteredProducts.map((item) => {
                     // Add safety check for item
                     if (!item || typeof item !== "object") {
-                      return null
+                      return null;
                     }
 
                     return (
@@ -259,8 +304,12 @@ export default function InventoryManagement() {
                               <Package className="h-5 w-5 text-pink-600" />
                             </div>
                             <div>
-                              <div className="font-semibold text-gray-900">{item.name || "Unknown Product"}</div>
-                              <div className="text-xs text-gray-500">Min: {item.min_stock || 0}</div>
+                              <div className="font-semibold text-gray-900">
+                                {item.name || "Unknown Product"}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                Min: {item.min_stock || 0}
+                              </div>
                             </div>
                           </div>
                         </td>
@@ -268,11 +317,13 @@ export default function InventoryManagement() {
                           <div className="flex items-center gap-2">
                             <span
                               className={`font-bold text-lg ${
-                                (item.current_stock || 0) <= (item.min_stock || 0)
+                                (item.current_stock || 0) <=
+                                (item.min_stock || 0)
                                   ? "text-red-500"
-                                  : (item.current_stock || 0) <= (item.min_stock || 0) * 1.5
-                                    ? "text-yellow-500"
-                                    : "text-green-500"
+                                  : (item.current_stock || 0) <=
+                                    (item.min_stock || 0) * 1.5
+                                  ? "text-yellow-500"
+                                  : "text-green-500"
                               }`}
                             >
                               {item.current_stock || 0}
@@ -280,14 +331,20 @@ export default function InventoryManagement() {
                             <span className="text-gray-400 text-sm">pcs</span>
                           </div>
                         </td>
-                        <td className="py-4 px-6 text-gray-700 font-medium">{formatCurrency(item.price || 0)}</td>
-                        <td className="py-4 px-6 font-bold text-gray-900">{formatCurrency(item.total_value || 0)}</td>
+                        <td className="py-4 px-6 text-gray-700 font-medium">
+                          {formatCurrency(item.price || 0)}
+                        </td>
+                        <td className="py-4 px-6 font-bold text-gray-900">
+                          {formatCurrency(item.total_value || 0)}
+                        </td>
                         <td className="py-4 px-6">
                           <div className="flex items-center gap-2">
                             <Button
                               size="sm"
                               className="cotton-candy-button from-green-400 to-emerald-400 rounded-full px-3"
-                              onClick={() => handleUpdateStock(item.id, "addition")}
+                              onClick={() =>
+                                handleUpdateStock(item.id, "addition")
+                              }
                               disabled={isLoading}
                               title="Tambah Stok"
                             >
@@ -296,7 +353,9 @@ export default function InventoryManagement() {
                             <Button
                               size="sm"
                               className="cotton-candy-button from-blue-400 to-cyan-400 rounded-full px-3"
-                              onClick={() => handleUpdateStock(item.id, "reduction")}
+                              onClick={() =>
+                                handleUpdateStock(item.id, "reduction")
+                              }
                               disabled={isLoading}
                               title="Kurangi Stok"
                             >
@@ -331,7 +390,7 @@ export default function InventoryManagement() {
                           </div>
                         </td>
                       </tr>
-                    )
+                    );
                   })
                 )}
               </tbody>
@@ -340,5 +399,5 @@ export default function InventoryManagement() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

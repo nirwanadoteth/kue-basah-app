@@ -1,18 +1,18 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { useAuth } from "@/lib/auth-context"
-import { Button } from "@/components/ui/button"
-import { Cake, Sparkles, LogOut, User } from "lucide-react"
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
+import { Button } from "@/components/ui/button";
+import { Cake, Sparkles, LogOut, User } from "lucide-react";
 
 export function Navbar() {
-  const pathname = usePathname()
-  const { user, logout, isAuthenticated } = useAuth()
+  const pathname = usePathname();
+  const { user, logout, isAuthenticated } = useAuth();
 
   // Don't show navbar on login page
   if (pathname === "/login" || !isAuthenticated) {
-    return null
+    return null;
   }
 
   const navItems = [
@@ -20,7 +20,7 @@ export function Navbar() {
     { href: "/inventaris", label: "Inventaris" },
     { href: "/pesanan", label: "Transaksi" },
     { href: "/laporan", label: "Laporan" },
-  ]
+  ];
 
   return (
     <nav className="bg-white/90 backdrop-blur-md border-b border-pink-200/50 px-6 py-4 sticky top-0 z-50 shadow-sm">
@@ -34,7 +34,9 @@ export function Navbar() {
             <span className="text-2xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
               NAY'S CAKE
             </span>
-            <p className="text-xs text-gray-500 -mt-1">Sweet Inventory Management</p>
+            <p className="text-xs text-gray-500 -mt-1">
+              Sweet Inventory Management
+            </p>
           </div>
         </div>
 
@@ -74,5 +76,5 @@ export function Navbar() {
         </div>
       </div>
     </nav>
-  )
+  );
 }

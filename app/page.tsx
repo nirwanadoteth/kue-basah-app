@@ -1,16 +1,26 @@
-"use client"
+"use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { useInventoryStore } from "@/lib/store-supabase"
-import { AddProductModal } from "@/components/add-product-modal"
-import { DeleteProductModal } from "@/components/delete-product-modal"
-import { EditProductModal } from "@/components/edit-product-modal"
-import { Plus, Minus, TrendingUp, Package, AlertTriangle, Sparkles, RefreshCw, Edit, Trash2 } from "lucide-react"
-import { formatCurrency, safeString, safeParseInt } from "@/lib/utils"
-import { useEffect } from "react"
-import { DatabaseSetupBanner } from "@/components/database-setup-banner"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useInventoryStore } from "@/lib/store-supabase";
+import { AddProductModal } from "@/components/add-product-modal";
+import { DeleteProductModal } from "@/components/delete-product-modal";
+import { EditProductModal } from "@/components/edit-product-modal";
+import {
+  Plus,
+  Minus,
+  TrendingUp,
+  Package,
+  AlertTriangle,
+  Sparkles,
+  RefreshCw,
+  Edit,
+  Trash2,
+} from "lucide-react";
+import { formatCurrency, safeString, safeParseInt } from "@/lib/utils";
+import { useEffect } from "react";
+import { DatabaseSetupBanner } from "@/components/database-setup-banner";
 
 export default function Dashboard() {
   const {
@@ -24,86 +34,119 @@ export default function Dashboard() {
     updateStock,
     deleteProduct,
     fetchProducts,
-  } = useInventoryStore()
+  } = useInventoryStore();
 
   useEffect(() => {
-    fetchProducts()
-  }, [fetchProducts])
+    fetchProducts();
+  }, [fetchProducts]);
 
   // Safe getters with error handling
   const totalStock = (() => {
     try {
-      return getTotalStock() || 0
+      return getTotalStock() || 0;
     } catch (error) {
-      console.error("Error getting total stock:", error)
-      return 0
+      console.error("Error getting total stock:", error);
+      return 0;
     }
-  })()
+  })();
 
   const lowStockItems = (() => {
     try {
-      return getLowStockItems() || 0
+      return getLowStockItems() || 0;
     } catch (error) {
-      console.error("Error getting low stock items:", error)
-      return 0
+      console.error("Error getting low stock items:", error);
+      return 0;
     }
-  })()
+  })();
 
   const totalValue = (() => {
     try {
-      return getTotalValue() || 0
+      return getTotalValue() || 0;
     } catch (error) {
-      console.error("Error getting total value:", error)
-      return 0
+      console.error("Error getting total value:", error);
+      return 0;
     }
-  })()
+  })();
 
-  const getStockStatus = (current: number | undefined, min: number | undefined) => {
+  const getStockStatus = (
+    current: number | undefined,
+    min: number | undefined
+  ) => {
     try {
-      const currentStock = safeParseInt(current, 0)
-      const minStock = safeParseInt(min, 0)
+      const currentStock = safeParseInt(current, 0);
+      const minStock = safeParseInt(min, 0);
 
       if (currentStock <= minStock * 0.5) {
-        return { text: "Stok Habis", color: "bg-red-100 text-red-800", icon: AlertTriangle }
+        return {
+          text: "Stok Habis",
+          color: "bg-red-100 text-red-800",
+          icon: AlertTriangle,
+        };
       }
       if (currentStock <= minStock) {
-        return { text: "Segera Restock", color: "bg-yellow-100 text-yellow-800", icon: AlertTriangle }
+        return {
+          text: "Segera Restock",
+          color: "bg-yellow-100 text-yellow-800",
+          icon: AlertTriangle,
+        };
       }
       if (currentStock <= minStock * 1.5) {
-        return { text: "Perlu Perhatian", color: "bg-orange-100 text-orange-800", icon: Package }
+        return {
+          text: "Perlu Perhatian",
+          color: "bg-orange-100 text-orange-800",
+          icon: Package,
+        };
       }
-      return { text: "Stok Aman", color: "bg-green-100 text-green-800", icon: Package }
+      return {
+        text: "Stok Aman",
+        color: "bg-green-100 text-green-800",
+        icon: Package,
+      };
     } catch (error) {
-      console.error("Error getting stock status:", error)
-      return { text: "Unknown", color: "bg-gray-100 text-gray-800", icon: Package }
+      console.error("Error getting stock status:", error);
+      return {
+        text: "Unknown",
+        color: "bg-gray-100 text-gray-800",
+        icon: Package,
+      };
     }
-  }
+  };
 
   const handleRefresh = async () => {
     try {
-      clearError()
-      await fetchProducts()
+      clearError();
+      await fetchProducts();
     } catch (error) {
-      console.error("Error refreshing:", error)
+      console.error("Error refreshing:", error);
     }
-  }
+  };
 
-  const handleDeleteProduct = async (productId: number, productName: string) => {
-    if (window.confirm(`Apakah Anda yakin ingin menghapus produk "${productName}"?`)) {
+  const handleDeleteProduct = async (
+    productId: number,
+    productName: string
+  ) => {
+    if (
+      window.confirm(
+        `Apakah Anda yakin ingin menghapus produk "${productName}"?`
+      )
+    ) {
       try {
-        await deleteProduct(productId)
+        await deleteProduct(productId);
       } catch (error) {
-        console.error("Error deleting product:", error)
+        console.error("Error deleting product:", error);
       }
     }
-  }
+  };
 
-  const handleUpdateStock = async (productId: number, type: string) => {
-    await updateStock(productId, 1, type)
-  }
+  const handleUpdateStock = async (
+    productId: number,
+    type: "addition" | "reduction"
+  ) => {
+    await updateStock(productId, 1, type);
+  };
 
   // Update the safeProducts array to handle loading state
-  const safeProducts = Array.isArray(products) ? products : []
+  const safeProducts = Array.isArray(products) ? products : [];
 
   // Add loading state check before the main return
   if (isLoading && safeProducts.length === 0) {
@@ -115,11 +158,14 @@ export default function Dashboard() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-32 bg-gradient-to-r from-pink-100 to-purple-100 rounded-2xl animate-pulse" />
+            <div
+              key={i}
+              className="h-32 bg-gradient-to-r from-pink-100 to-purple-100 rounded-2xl animate-pulse"
+            />
           ))}
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -159,7 +205,9 @@ export default function Dashboard() {
             className="border-pink-200 text-pink-600 hover:bg-pink-50 rounded-full bg-transparent"
             disabled={isLoading}
           >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
+            <RefreshCw
+              className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
+            />
             Refresh Data
           </Button>
 
@@ -230,14 +278,18 @@ export default function Dashboard() {
               <AlertTriangle className="h-5 w-5 text-yellow-500" />
               Status Inventaris
             </CardTitle>
-            <div className="text-sm text-gray-500">{safeProducts.length} produk terdaftar</div>
+            <div className="text-sm text-gray-500">
+              {safeProducts.length} produk terdaftar
+            </div>
           </div>
         </CardHeader>
         <CardContent>
           {!safeProducts || safeProducts.length === 0 ? (
             <div className="text-center py-12">
               <Package className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-              <p className="text-gray-500 mb-4">Belum ada produk. Tambahkan produk pertama Anda!</p>
+              <p className="text-gray-500 mb-4">
+                Belum ada produk. Tambahkan produk pertama Anda!
+              </p>
               <AddProductModal
                 trigger={
                   <Button className="cotton-candy-button from-purple-400 to-indigo-400 rounded-full px-6">
@@ -252,40 +304,68 @@ export default function Dashboard() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-pink-100">
-                    <th className="text-left py-4 px-4 font-medium text-gray-600">Produk</th>
-                    <th className="text-left py-4 px-4 font-medium text-gray-600">Stok Saat Ini</th>
-                    <th className="text-left py-4 px-4 font-medium text-gray-600">Stok Minimum</th>
-                    <th className="text-left py-4 px-4 font-medium text-gray-600">Status</th>
-                    <th className="text-left py-4 px-4 font-medium text-gray-600">Nilai</th>
-                    <th className="text-left py-4 px-4 font-medium text-gray-600">Aksi</th>
+                    <th className="text-left py-4 px-4 font-medium text-gray-600">
+                      Produk
+                    </th>
+                    <th className="text-left py-4 px-4 font-medium text-gray-600">
+                      Stok Saat Ini
+                    </th>
+                    <th className="text-left py-4 px-4 font-medium text-gray-600">
+                      Stok Minimum
+                    </th>
+                    <th className="text-left py-4 px-4 font-medium text-gray-600">
+                      Status
+                    </th>
+                    <th className="text-left py-4 px-4 font-medium text-gray-600">
+                      Nilai
+                    </th>
+                    <th className="text-left py-4 px-4 font-medium text-gray-600">
+                      Aksi
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {safeProducts.map((item) => {
                     try {
-                      const status = getStockStatus(item.current_stock, item.min_stock)
-                      const StatusIcon = status.icon
+                      const status = getStockStatus(
+                        item.current_stock,
+                        item.min_stock
+                      );
+                      const StatusIcon = status.icon;
 
                       return (
-                        <tr key={item.id} className="border-b border-pink-50 hover:bg-pink-25 transition-colors">
-                          <td className="py-4 px-4 font-medium text-gray-900">{safeString(item.name)}</td>
+                        <tr
+                          key={item.id}
+                          className="border-b border-pink-50 hover:bg-pink-25 transition-colors"
+                        >
+                          <td className="py-4 px-4 font-medium text-gray-900">
+                            {safeString(item.name)}
+                          </td>
                           <td className="py-4 px-4 text-gray-600 font-semibold">
                             {safeParseInt(item.current_stock, 0)}
                           </td>
-                          <td className="py-4 px-4 text-gray-600">{safeParseInt(item.min_stock, 0)}</td>
+                          <td className="py-4 px-4 text-gray-600">
+                            {safeParseInt(item.min_stock, 0)}
+                          </td>
                           <td className="py-4 px-4">
-                            <Badge className={`${status.color} border-0 flex items-center gap-1 w-fit`}>
+                            <Badge
+                              className={`${status.color} border-0 flex items-center gap-1 w-fit`}
+                            >
                               <StatusIcon className="h-3 w-3" />
                               {status.text}
                             </Badge>
                           </td>
-                          <td className="py-4 px-4 font-medium text-gray-900">{formatCurrency(item.total_value)}</td>
+                          <td className="py-4 px-4 font-medium text-gray-900">
+                            {formatCurrency(item.total_value)}
+                          </td>
                           <td className="py-4 px-4">
                             <div className="flex items-center gap-2">
                               <Button
                                 size="sm"
                                 className="cotton-candy-button from-green-400 to-emerald-400 rounded-full px-3"
-                                onClick={() => handleUpdateStock(item.id, "addition")}
+                                onClick={() =>
+                                  handleUpdateStock(item.id, "addition")
+                                }
                                 disabled={isLoading}
                                 title="Tambah Stok"
                               >
@@ -294,7 +374,9 @@ export default function Dashboard() {
                               <Button
                                 size="sm"
                                 className="cotton-candy-button from-blue-400 to-cyan-400 rounded-full px-3"
-                                onClick={() => handleUpdateStock(item.id, "reduction")}
+                                onClick={() =>
+                                  handleUpdateStock(item.id, "reduction")
+                                }
                                 disabled={isLoading}
                                 title="Kurangi Stok"
                               >
@@ -329,16 +411,22 @@ export default function Dashboard() {
                             </div>
                           </td>
                         </tr>
-                      )
+                      );
                     } catch (error) {
-                      console.error("Error rendering product row:", error)
+                      console.error("Error rendering product row:", error);
                       return (
-                        <tr key={item.id || Math.random()} className="border-b border-pink-50">
-                          <td colSpan={6} className="py-4 px-4 text-red-500 text-center">
+                        <tr
+                          key={item.id || Math.random()}
+                          className="border-b border-pink-50"
+                        >
+                          <td
+                            colSpan={6}
+                            className="py-4 px-4 text-red-500 text-center"
+                          >
                             Error loading product data
                           </td>
                         </tr>
-                      )
+                      );
                     }
                   })}
                 </tbody>
@@ -354,8 +442,10 @@ export default function Dashboard() {
           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
           <span>Terhubung ke Supabase Database</span>
         </div>
-        <p className="mt-2 text-xs">Semua data disimpan secara real-time di cloud database</p>
+        <p className="mt-2 text-xs">
+          Semua data disimpan secara real-time di cloud database
+        </p>
       </div>
     </div>
-  )
+  );
 }

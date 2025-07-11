@@ -1,55 +1,66 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { useAuth } from "@/lib/auth-context"
-import { TransactionsAPI } from "@/lib/api/transactions"
-import { ShoppingCart } from "lucide-react"
-import { toast } from "sonner"
+import type React from "react";
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useAuth } from "@/lib/auth-context";
+import { TransactionsAPI } from "@/lib/api/transactions";
+import { ShoppingCart } from "lucide-react";
+import { toast } from "sonner";
 
 interface CreateTransactionModalProps {
-  trigger: React.ReactNode
-  onTransactionCreated: (transactionId: number) => void
-  isOrder?: boolean
+  trigger: React.ReactNode;
+  onTransactionCreated: (transactionId: number) => void;
+  isOrder?: boolean;
 }
 
-export function CreateTransactionModal({ trigger, onTransactionCreated, isOrder = false }: CreateTransactionModalProps) {
-  const [open, setOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+export function CreateTransactionModal({
+  trigger,
+  onTransactionCreated,
+  isOrder = false,
+}: CreateTransactionModalProps) {
+  const [open, setOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const { user } = useAuth()
+  const { user } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!user) {
-      toast.error("Anda harus login untuk membuat transaksi")
-      return
+      toast.error("Anda harus login untuk membuat transaksi");
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
 
     try {
       const newTransaction = await TransactionsAPI.create({
         user_id: user.user_id,
-      })
+      });
 
-      setOpen(false)
-      toast.success("Transaksi baru berhasil dibuat!")
-      onTransactionCreated(newTransaction.id)
+      setOpen(false);
+      toast.success("Transaksi baru berhasil dibuat!");
+      onTransactionCreated(newTransaction.id);
     } catch (error) {
-      console.error("Error creating transaction:", error)
-      const errorMessage = error instanceof Error ? error.message : "Gagal membuat transaksi"
-      toast.error(errorMessage)
+      console.error("Error creating transaction:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Gagal membuat transaksi";
+      toast.error(errorMessage);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -89,11 +100,15 @@ export function CreateTransactionModal({ trigger, onTransactionCreated, isOrder 
               className="flex-1 cotton-candy-button from-green-400 to-emerald-400"
               disabled={isLoading}
             >
-              {isLoading ? "Membuat..." : isOrder ? "Buat Pesanan" : "Buat Transaksi"}
+              {isLoading
+                ? "Membuat..."
+                : isOrder
+                ? "Buat Pesanan"
+                : "Buat Transaksi"}
             </Button>
           </div>
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

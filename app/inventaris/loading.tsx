@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { TableSkeleton } from "@/components/loading-skeleton"
+import { TableSkeleton } from "@/components/loading-skeleton";
 
 /**
  * Loading fallback for /inventaris
@@ -22,5 +22,5 @@ export default function InventoryLoading() {
       {/* Table skeleton */}
       <TableSkeleton />
     </div>
-  )
+  );
 }

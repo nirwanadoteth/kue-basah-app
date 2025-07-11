@@ -1,66 +1,74 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { useInventoryStore } from "@/lib/store-supabase"
-import { Plus } from "lucide-react"
-import { toast } from "sonner"
+import type React from "react";
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useInventoryStore } from "@/lib/store-supabase";
+import { Plus } from "lucide-react";
+import { toast } from "sonner";
 
 interface AddProductModalProps {
-  trigger: React.ReactNode
+  trigger: React.ReactNode;
 }
 
 export function AddProductModal({ trigger }: AddProductModalProps) {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     price: "",
     currentStock: "",
     minStock: "20",
-  })
-  
-  const { addProduct, isLoading } = useInventoryStore()
+  });
+
+  const { addProduct, isLoading } = useInventoryStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     // Validate inputs with proper null checks
     if (!formData.name || !formData.name.trim()) {
-      toast.error("Nama produk wajib diisi")
-      return
+      toast.error("Nama produk wajib diisi");
+      return;
     }
 
     if (!formData.price || !formData.price.trim()) {
-      toast.error("Harga wajib diisi")
-      return
+      toast.error("Harga wajib diisi");
+      return;
     }
 
     if (!formData.currentStock || !formData.currentStock.trim()) {
-      toast.error("Stok awal wajib diisi")
-      return
+      toast.error("Stok awal wajib diisi");
+      return;
     }
 
-    const price = Number.parseFloat(formData.price.trim())
-    const currentStock = Number.parseInt(formData.currentStock.trim())
-    const minStock = Number.parseInt(formData.minStock?.trim() || "20")
+    const price = Number.parseFloat(formData.price.trim());
+    const currentStock = Number.parseInt(formData.currentStock.trim());
+    const minStock = Number.parseInt(formData.minStock?.trim() || "20");
 
     if (isNaN(price) || price <= 0) {
-      toast.error("Harga harus berupa angka yang valid dan lebih dari 0")
-      return
+      toast.error("Harga harus berupa angka yang valid dan lebih dari 0");
+      return;
     }
 
     if (isNaN(currentStock) || currentStock < 0) {
-      toast.error("Stok awal harus berupa angka yang valid dan tidak negatif")
-      return
+      toast.error("Stok awal harus berupa angka yang valid dan tidak negatif");
+      return;
     }
 
     if (isNaN(minStock) || minStock < 0) {
-      toast.error("Stok minimum harus berupa angka yang valid dan tidak negatif")
-      return
+      toast.error(
+        "Stok minimum harus berupa angka yang valid dan tidak negatif"
+      );
+      return;
     }
 
     try {
@@ -69,7 +77,7 @@ export function AddProductModal({ trigger }: AddProductModalProps) {
         price,
         current_stock: currentStock,
         min_stock: minStock,
-      })
+      });
 
       // Reset form
       setFormData({
@@ -77,19 +85,20 @@ export function AddProductModal({ trigger }: AddProductModalProps) {
         price: "",
         currentStock: "",
         minStock: "20",
-      })
-      setOpen(false)
-      toast.success("Produk berhasil ditambahkan!")
+      });
+      setOpen(false);
+      toast.success("Produk berhasil ditambahkan!");
     } catch (error) {
-      console.error("Error adding product:", error)
-      const errorMessage = error instanceof Error ? error.message : "Gagal menambahkan produk"
-      toast.error(errorMessage)
+      console.error("Error adding product:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Gagal menambahkan produk";
+      toast.error(errorMessage);
     }
-  }
+  };
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-  }
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -139,7 +148,9 @@ export function AddProductModal({ trigger }: AddProductModalProps) {
                 type="number"
                 min="0"
                 value={formData.currentStock}
-                onChange={(e) => handleInputChange("currentStock", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("currentStock", e.target.value)
+                }
                 placeholder="50"
                 className="border-pink-200 focus:border-pink-400"
                 required
@@ -181,5 +192,5 @@ export function AddProductModal({ trigger }: AddProductModalProps) {
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

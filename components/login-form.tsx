@@ -1,54 +1,55 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { useAuth } from "@/lib/auth-context"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2, User, Lock, Cake, Sparkles } from "lucide-react"
-import { toast } from "sonner"
+import { useState } from "react";
+import { useAuth } from "@/lib/auth-context";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2, User, Lock, Cake, Sparkles } from "lucide-react";
+import { toast } from "sonner";
 
 export default function LoginForm() {
   const [formData, setFormData] = useState({
     username: "",
     password: "",
-  })
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { login } = useAuth()
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!formData.username.trim()) {
-      toast.error("Username wajib diisi")
-      return
+      toast.error("Username wajib diisi");
+      return;
     }
 
     if (!formData.password) {
-      toast.error("Password wajib diisi")
-      return
+      toast.error("Password wajib diisi");
+      return;
     }
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
 
     try {
-      await login(formData.username, formData.password)
-      toast.success("Login berhasil! Selamat datang kembali")
+      await login(formData.username, formData.password);
+      toast.success("Login berhasil! Selamat datang kembali");
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Login gagal"
-      toast.error(errorMessage)
+      const errorMessage =
+        error instanceof Error ? error.message : "Login gagal";
+      toast.error(errorMessage);
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-  }
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
@@ -78,7 +79,9 @@ export default function LoginForm() {
                   id="username"
                   type="text"
                   value={formData.username}
-                  onChange={(e) => handleInputChange("username", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("username", e.target.value)
+                  }
                   placeholder="Masukkan username"
                   className="pl-10 border-pink-200 focus:border-pink-400 rounded-xl h-12"
                   disabled={isSubmitting}
@@ -97,7 +100,9 @@ export default function LoginForm() {
                   id="password"
                   type="password"
                   value={formData.password}
-                  onChange={(e) => handleInputChange("password", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("password", e.target.value)
+                  }
                   placeholder="Masukkan password"
                   className="pl-10 border-pink-200 focus:border-pink-400 rounded-xl h-12"
                   disabled={isSubmitting}
@@ -124,5 +129,5 @@ export default function LoginForm() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

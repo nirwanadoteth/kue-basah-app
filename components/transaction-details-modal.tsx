@@ -1,22 +1,41 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState, useEffect } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { TransactionsAPI } from "@/lib/api/transactions"
-import { useInventoryStore } from "@/lib/store-supabase"
-import { Plus, Minus, Trash2, ShoppingCart, CheckCircle, Package } from "lucide-react"
-import { formatCurrency, formatDate } from "@/lib/utils"
-import { toast } from "sonner"
-import type { TransactionWithDetails } from "@/lib/supabase"
+import type React from "react";
+import { useState, useEffect } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { TransactionsAPI } from "@/lib/api/transactions";
+import { useInventoryStore } from "@/lib/store-supabase";
+import {
+  Plus,
+  Minus,
+  Trash2,
+  ShoppingCart,
+  CheckCircle,
+  Package,
+} from "lucide-react";
+import { formatCurrency, formatDate } from "@/lib/utils";
+import { toast } from "sonner";
+import type { TransactionWithDetails } from "@/lib/supabase";
 
 interface TransactionDetailsModalProps {
-  trigger: React.ReactNode
-  transactionId: number
-  onTransactionUpdated?: () => void
+  trigger: React.ReactNode;
+  transactionId: number;
+  onTransactionUpdated?: () => void;
 }
 
 export function TransactionDetailsModal({
@@ -24,132 +43,152 @@ export function TransactionDetailsModal({
   transactionId,
   onTransactionUpdated,
 }: TransactionDetailsModalProps) {
-  const [open, setOpen] = useState(false)
-  const [transaction, setTransaction] = useState<TransactionWithDetails | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [selectedProductId, setSelectedProductId] = useState<string>("")
-  const [quantity, setQuantity] = useState<string>("1")
+  const [open, setOpen] = useState(false);
+  const [transaction, setTransaction] = useState<TransactionWithDetails | null>(
+    null
+  );
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState<string>("");
+  const [quantity, setQuantity] = useState<string>("1");
 
-  const { products, fetchProducts } = useInventoryStore()
+  const { products, fetchProducts } = useInventoryStore();
 
   useEffect(() => {
     if (open) {
-      loadTransaction()
-      fetchProducts()
+      loadTransaction();
+      fetchProducts();
     }
-  }, [open, transactionId, fetchProducts])
+  }, [open, transactionId, fetchProducts]);
 
   const loadTransaction = async () => {
     try {
-      setIsLoading(true)
-      const transactionData = await TransactionsAPI.getById(transactionId)
-      setTransaction(transactionData)
+      setIsLoading(true);
+      const transactionData = await TransactionsAPI.getById(transactionId);
+      setTransaction(transactionData);
     } catch (error) {
-      console.error("Error loading transaction:", error)
-      toast.error("Gagal memuat detail transaksi")
+      console.error("Error loading transaction:", error);
+      toast.error("Gagal memuat detail transaksi");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleAddItem = async () => {
     if (!selectedProductId || !quantity) {
-      toast.error("Pilih produk dan masukkan jumlah")
-      return
+      toast.error("Pilih produk dan masukkan jumlah");
+      return;
     }
 
-    const qty = Number.parseInt(quantity)
+    const qty = Number.parseInt(quantity);
     if (qty <= 0) {
-      toast.error("Jumlah harus lebih dari 0")
-      return
+      toast.error("Jumlah harus lebih dari 0");
+      return;
     }
 
     try {
-      setIsLoading(true)
-      await TransactionsAPI.addItem(transactionId, Number.parseInt(selectedProductId), qty)
-      await loadTransaction()
-      setSelectedProductId("")
-      setQuantity("1")
-      toast.success("Item berhasil ditambahkan")
-      onTransactionUpdated?.()
+      setIsLoading(true);
+      await TransactionsAPI.addItem(
+        transactionId,
+        Number.parseInt(selectedProductId),
+        qty
+      );
+      await loadTransaction();
+      setSelectedProductId("");
+      setQuantity("1");
+      toast.success("Item berhasil ditambahkan");
+      onTransactionUpdated?.();
     } catch (error) {
-      console.error("Error adding item:", error)
-      const errorMessage = error instanceof Error ? error.message : "Gagal menambahkan item"
-      toast.error(errorMessage)
+      console.error("Error adding item:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Gagal menambahkan item";
+      toast.error(errorMessage);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
-  const handleUpdateQuantity = async (detailId: number, newQuantity: number) => {
+  const handleUpdateQuantity = async (
+    detailId: number,
+    newQuantity: number
+  ) => {
     if (newQuantity <= 0) {
-      toast.error("Jumlah harus lebih dari 0")
-      return
+      toast.error("Jumlah harus lebih dari 0");
+      return;
     }
 
     try {
-      setIsLoading(true)
-      await TransactionsAPI.updateItemQuantity(detailId, newQuantity)
-      await loadTransaction()
-      toast.success("Jumlah berhasil diperbarui")
-      onTransactionUpdated?.()
+      setIsLoading(true);
+      await TransactionsAPI.updateItemQuantity(detailId, newQuantity);
+      await loadTransaction();
+      toast.success("Jumlah berhasil diperbarui");
+      onTransactionUpdated?.();
     } catch (error) {
-      console.error("Error updating quantity:", error)
-      const errorMessage = error instanceof Error ? error.message : "Gagal memperbarui jumlah"
-      toast.error(errorMessage)
+      console.error("Error updating quantity:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Gagal memperbarui jumlah";
+      toast.error(errorMessage);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleRemoveItem = async (detailId: number, productName: string) => {
     if (!window.confirm(`Hapus ${productName} dari transaksi?`)) {
-      return
+      return;
     }
 
     try {
-      setIsLoading(true)
-      await TransactionsAPI.removeItem(detailId)
-      await loadTransaction()
-      toast.success("Item berhasil dihapus")
-      onTransactionUpdated?.()
+      setIsLoading(true);
+      await TransactionsAPI.removeItem(detailId);
+      await loadTransaction();
+      toast.success("Item berhasil dihapus");
+      onTransactionUpdated?.();
     } catch (error) {
-      console.error("Error removing item:", error)
-      const errorMessage = error instanceof Error ? error.message : "Gagal menghapus item"
-      toast.error(errorMessage)
+      console.error("Error removing item:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Gagal menghapus item";
+      toast.error(errorMessage);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleCompleteTransaction = async () => {
     if (!transaction || transaction.details.length === 0) {
-      toast.error("Transaksi harus memiliki minimal 1 item")
-      return
+      toast.error("Transaksi harus memiliki minimal 1 item");
+      return;
     }
 
-    if (!window.confirm("Selesaikan transaksi ini? Stok akan dikurangi dan transaksi tidak dapat diubah lagi.")) {
-      return
+    if (
+      !window.confirm(
+        "Selesaikan transaksi ini? Stok akan dikurangi dan transaksi tidak dapat diubah lagi."
+      )
+    ) {
+      return;
     }
 
     try {
-      setIsLoading(true)
-      await TransactionsAPI.complete(transactionId)
-      await loadTransaction()
-      toast.success("Transaksi berhasil diselesaikan!")
-      onTransactionUpdated?.()
+      setIsLoading(true);
+      await TransactionsAPI.complete(transactionId);
+      await loadTransaction();
+      toast.success("Transaksi berhasil diselesaikan!");
+      onTransactionUpdated?.();
     } catch (error) {
-      console.error("Error completing transaction:", error)
-      const errorMessage = error instanceof Error ? error.message : "Gagal menyelesaikan transaksi"
-      toast.error(errorMessage)
+      console.error("Error completing transaction:", error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Gagal menyelesaikan transaksi";
+      toast.error(errorMessage);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const availableProducts = products.filter(
-    (product) => !transaction?.details.some((detail) => detail.product_id === product.id),
-  )
+    (product) =>
+      !transaction?.details.some((detail) => detail.product_id === product.id)
+  );
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -176,11 +215,15 @@ export function TransactionDetailsModal({
               </div>
               <div>
                 <p className="text-sm text-gray-600">Tanggal</p>
-                <p className="font-semibold">{formatDate(transaction.created_at)}</p>
+                <p className="font-semibold">
+                  {formatDate(transaction.created_at)}
+                </p>
               </div>
               <div className="md:col-span-2">
                 <p className="text-sm text-gray-600">Total</p>
-                <p className="text-2xl font-bold text-green-600">{formatCurrency(transaction.total_price)}</p>
+                <p className="text-2xl font-bold text-green-600">
+                  {formatCurrency(transaction.total_price)}
+                </p>
               </div>
             </div>
 
@@ -188,14 +231,21 @@ export function TransactionDetailsModal({
             <div className="p-4 bg-blue-50 rounded-lg">
               <h4 className="font-semibold text-blue-800 mb-3">Tambah Item</h4>
               <div className="flex gap-3">
-                <Select value={selectedProductId} onValueChange={setSelectedProductId}>
+                <Select
+                  value={selectedProductId}
+                  onValueChange={setSelectedProductId}
+                >
                   <SelectTrigger className="flex-1">
                     <SelectValue placeholder="Pilih produk" />
                   </SelectTrigger>
                   <SelectContent>
                     {availableProducts.map((product) => (
-                      <SelectItem key={product.id} value={product.id.toString()}>
-                        {product.name} - {formatCurrency(product.price)} (Stok: {product.current_stock})
+                      <SelectItem
+                        key={product.id}
+                        value={product.id.toString()}
+                      >
+                        {product.name} - {formatCurrency(product.price)} (Stok:{" "}
+                        {product.current_stock})
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -220,7 +270,9 @@ export function TransactionDetailsModal({
 
             {/* Transaction Items */}
             <div>
-              <h4 className="font-semibold text-gray-800 mb-3">Item Transaksi</h4>
+              <h4 className="font-semibold text-gray-800 mb-3">
+                Item Transaksi
+              </h4>
               {transaction.details.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   <Package className="h-12 w-12 mx-auto mb-2 text-gray-300" />
@@ -236,25 +288,34 @@ export function TransactionDetailsModal({
                       <div className="flex-1">
                         <p className="font-medium">{detail.product_name}</p>
                         <p className="text-sm text-gray-600">
-                          {formatCurrency(detail.product_price)} × {detail.quantity}
+                          {formatCurrency(detail.product_price)} ×{" "}
+                          {detail.quantity}
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold text-green-600">{formatCurrency(detail.subtotal)}</span>
+                        <span className="font-semibold text-green-600">
+                          {formatCurrency(detail.subtotal)}
+                        </span>
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => handleUpdateQuantity(detail.id, detail.quantity - 1)}
+                          onClick={() =>
+                            handleUpdateQuantity(detail.id, detail.quantity - 1)
+                          }
                           disabled={isLoading || detail.quantity <= 1}
                           className="h-8 w-8 p-0"
                         >
                           <Minus className="h-3 w-3" />
                         </Button>
-                        <span className="w-8 text-center text-sm">{detail.quantity}</span>
+                        <span className="w-8 text-center text-sm">
+                          {detail.quantity}
+                        </span>
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => handleUpdateQuantity(detail.id, detail.quantity + 1)}
+                          onClick={() =>
+                            handleUpdateQuantity(detail.id, detail.quantity + 1)
+                          }
                           disabled={isLoading}
                           className="h-8 w-8 p-0"
                         >
@@ -263,7 +324,9 @@ export function TransactionDetailsModal({
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => handleRemoveItem(detail.id, detail.product_name)}
+                          onClick={() =>
+                            handleRemoveItem(detail.id, detail.product_name)
+                          }
                           disabled={isLoading}
                           className="h-8 w-8 p-0 border-red-200 text-red-500 hover:bg-red-50"
                         >
@@ -304,5 +367,5 @@ export function TransactionDetailsModal({
         )}
       </DialogContent>
     </Dialog>
-  )
+  );
 }

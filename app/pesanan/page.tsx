@@ -105,21 +105,21 @@ export default function TransactionsPage() {
         switch (dateFilter) {
           case "today":
             filterDate.setHours(0, 0, 0, 0)
-            filtered = filtered.filter((t) => {
+            filtered = filtered.filter((t: TransactionWithDetails) => {
               const transactionDate = new Date(t.created_at)
               return transactionDate >= filterDate
             })
             break
           case "week":
             filterDate.setDate(today.getDate() - 7)
-            filtered = filtered.filter((t) => {
+            filtered = filtered.filter((t: TransactionWithDetails) => {
               const transactionDate = new Date(t.created_at)
               return transactionDate >= filterDate
             })
             break
           case "month":
             filterDate.setMonth(today.getMonth() - 1)
-            filtered = filtered.filter((t) => {
+            filtered = filtered.filter((t: TransactionWithDetails) => {
               const transactionDate = new Date(t.created_at)
               return transactionDate >= filterDate
             })

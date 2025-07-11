@@ -1,30 +1,36 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState, useEffect } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { useInventoryStore } from "@/lib/store-supabase"
-import { Edit } from "lucide-react"
-import { toast } from "sonner"
-import type { Product } from "@/lib/supabase"
+import type React from "react";
+import { useState, useEffect } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useInventoryStore } from "@/lib/store-supabase";
+import { Edit } from "lucide-react";
+import { toast } from "sonner";
+import type { Product } from "@/lib/supabase";
 
 interface EditProductModalProps {
-  trigger: React.ReactNode
-  product: Product
+  trigger: React.ReactNode;
+  product: Product;
 }
 
 export function EditProductModal({ trigger, product }: EditProductModalProps) {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     price: "",
     minStock: "",
-  })
+  });
 
-  const { updateProduct, isLoading } = useInventoryStore()
+  const { updateProduct, isLoading } = useInventoryStore();
 
   // Initialize form data when modal opens or product changes
   useEffect(() => {
@@ -33,40 +39,42 @@ export function EditProductModal({ trigger, product }: EditProductModalProps) {
         name: product.name || "",
         price: product.price?.toString() || "",
         minStock: product.min_stock?.toString() || "",
-      })
+      });
     }
-  }, [product, open])
+  }, [product, open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     // Validate inputs
     if (!formData.name || !formData.name.trim()) {
-      toast.error("Nama produk wajib diisi")
-      return
+      toast.error("Nama produk wajib diisi");
+      return;
     }
 
     if (!formData.price || !formData.price.trim()) {
-      toast.error("Harga wajib diisi")
-      return
+      toast.error("Harga wajib diisi");
+      return;
     }
 
     if (!formData.minStock || !formData.minStock.trim()) {
-      toast.error("Stok minimum wajib diisi")
-      return
+      toast.error("Stok minimum wajib diisi");
+      return;
     }
 
-    const price = Number.parseFloat(formData.price.trim())
-    const minStock = Number.parseInt(formData.minStock.trim())
+    const price = Number.parseFloat(formData.price.trim());
+    const minStock = Number.parseInt(formData.minStock.trim());
 
     if (isNaN(price) || price <= 0) {
-      toast.error("Harga harus berupa angka yang valid dan lebih dari 0")
-      return
+      toast.error("Harga harus berupa angka yang valid dan lebih dari 0");
+      return;
     }
 
     if (isNaN(minStock) || minStock < 0) {
-      toast.error("Stok minimum harus berupa angka yang valid dan tidak negatif")
-      return
+      toast.error(
+        "Stok minimum harus berupa angka yang valid dan tidak negatif"
+      );
+      return;
     }
 
     try {
@@ -74,20 +82,21 @@ export function EditProductModal({ trigger, product }: EditProductModalProps) {
         name: formData.name.trim(),
         price,
         min_stock: minStock,
-      })
+      });
 
-      setOpen(false)
-      toast.success("Produk berhasil diperbarui!")
+      setOpen(false);
+      toast.success("Produk berhasil diperbarui!");
     } catch (error) {
-      console.error("Error updating product:", error)
-      const errorMessage = error instanceof Error ? error.message : "Gagal memperbarui produk"
-      toast.error(errorMessage)
+      console.error("Error updating product:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Gagal memperbarui produk";
+      toast.error(errorMessage);
     }
-  }
+  };
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-  }
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -147,10 +156,13 @@ export function EditProductModal({ trigger, product }: EditProductModalProps) {
             <div className="text-sm text-gray-600">
               <div className="flex justify-between">
                 <span>Stok Saat Ini:</span>
-                <span className="font-semibold">{product.current_stock || 0}</span>
+                <span className="font-semibold">
+                  {product.current_stock || 0}
+                </span>
               </div>
               <div className="text-xs text-gray-500 mt-1">
-                * Stok saat ini tidak dapat diubah melalui form ini. Gunakan fitur Tambah/Kurangi Stok.
+                * Stok saat ini tidak dapat diubah melalui form ini. Gunakan
+                fitur Tambah/Kurangi Stok.
               </div>
             </div>
           </div>
@@ -165,12 +177,16 @@ export function EditProductModal({ trigger, product }: EditProductModalProps) {
             >
               Batal
             </Button>
-            <Button type="submit" className="flex-1 cotton-candy-button from-blue-400 to-cyan-400" disabled={isLoading}>
+            <Button
+              type="submit"
+              className="flex-1 cotton-candy-button from-blue-400 to-cyan-400"
+              disabled={isLoading}
+            >
               {isLoading ? "Menyimpan..." : "Simpan Perubahan"}
             </Button>
           </div>
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
