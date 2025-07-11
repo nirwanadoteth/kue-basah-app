@@ -156,7 +156,7 @@ export default function Reports() {
       <DatabaseSetupBanner />
 
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent flex items-center gap-2">
             <BarChart3 className="h-8 w-8 text-pink-500" />
@@ -217,7 +217,7 @@ export default function Reports() {
 
         <TabsContent value="harian" className="space-y-6">
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <Card className="cotton-candy-card rounded-2xl border-0 hover:shadow-xl transition-all duration-300">
               <CardContent className="p-4 text-center">
                 <TrendingUp className="h-8 w-8 text-green-500 mx-auto mb-2" />
@@ -259,7 +259,7 @@ export default function Reports() {
             </Card>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Stock Chart */}
             <Card className="cotton-candy-card rounded-2xl border-0 shadow-lg">
               <CardHeader>
