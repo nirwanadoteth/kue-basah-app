@@ -31,9 +31,12 @@ import {
 import { formatCurrency } from "@/lib/utils";
 import { DatabaseSetupBanner } from "@/components/database-setup-banner";
 
+import { useMediaQuery } from "@/hooks/use-media-query";
+
 const COLORS = ["#FF6B9D", "#C44569", "#F8B500", "#6C5CE7", "#00CEC9"];
 
 export default function Reports() {
+  const isMobile = useMediaQuery("(max-width: 768px)");
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [analyticsData, setAnalyticsData] = useState<{
     stockTrend: Array<{ date: string; stock: number; value: number }>;
@@ -320,22 +323,20 @@ export default function Reports() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-col md:flex-row items-center gap-4 p-4">
-                <div className="w-full flex-1">
-                  <ResponsiveContainer width="100%" height={240}>
+              <div className="flex flex-col lg:flex-row items-center gap-8">
+                <div className="flex-1">
+                  <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
                       <Pie
                         data={analyticsData.productDistribution}
                         cx="50%"
                         cy="50%"
-                        outerRadius={80}
+                        outerRadius={100}
                         fill="#8884d8"
                         dataKey="stock"
-                        labelLine={false}
-                        label={({ percent }) => {
-                          if (percent < 0.05) return "";
-                          return `${(percent * 100).toFixed(0)}%`;
-                        }}
+                        label={({ name, percent }) =>
+                          `${name} ${(percent * 100).toFixed(0)}%`
+                        }
                       >
                         {analyticsData.productDistribution.map(
                           (entry, index) => (
@@ -349,11 +350,11 @@ export default function Reports() {
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
-                <div className="w-full flex-1 space-y-3">
+                <div className="flex-1 space-y-3">
                   {analyticsData.productDistribution.map((item, index) => (
                     <div key={index} className="flex items-center gap-3">
                       <div
-                        className="w-3 h-3 rounded-full"
+                        className="w-4 h-4 rounded-full"
                         style={{
                           backgroundColor: COLORS[index % COLORS.length],
                         }}
@@ -361,7 +362,7 @@ export default function Reports() {
                       <span className="text-sm font-medium text-gray-700">
                         {item.name}
                       </span>
-                      <span className="text-xs text-gray-500 ml-auto">
+                      <span className="text-sm text-gray-500 ml-auto">
                         {item.stock} pcs
                       </span>
                     </div>
