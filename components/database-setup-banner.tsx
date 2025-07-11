@@ -34,8 +34,7 @@ export function DatabaseSetupBanner() {
   }, [fetchProducts])
 
   const handleRunSetup = () => {
-    window.open("/scripts/create-database-complete.sql", "_blank")
-    window.open("/scripts/fix-ambiguous-transaction-functions.sql", "_blank")
+    window.open("/scripts/combined-database-setup.sql", "_blank")
   }
 
   const handleRetry = async () => {
