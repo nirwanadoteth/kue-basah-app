@@ -58,8 +58,7 @@ export function Navbar() {
           {user && (
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <User className="h-4 w-4" />
-              <span className="font-medium">{user.full_name || user.username}</span>
-              <span className="text-xs bg-pink-100 text-pink-600 px-2 py-1 rounded-full">{user.role}</span>
+              <span className="font-medium">{user.username}</span>
             </div>
           )}
 

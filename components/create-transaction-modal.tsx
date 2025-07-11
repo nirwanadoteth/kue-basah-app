@@ -15,17 +15,12 @@ import { toast } from "sonner"
 interface CreateTransactionModalProps {
   trigger: React.ReactNode
   onTransactionCreated: (transactionId: number) => void
-  isOrder?: boolean // Optional flag to show customer fields
+  isOrder?: boolean
 }
 
 export function CreateTransactionModal({ trigger, onTransactionCreated, isOrder = false }: CreateTransactionModalProps) {
   const [open, setOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [formData, setFormData] = useState({
-    customerName: "",
-    customerPhone: "",
-    notes: "",
-  })
 
   const { user } = useAuth()
 
@@ -37,28 +32,13 @@ export function CreateTransactionModal({ trigger, onTransactionCreated, isOrder 
       return
     }
 
-    if (isOrder && !formData.customerName.trim()) {
-      toast.error("Nama pelanggan wajib diisi untuk pesanan")
-      return
-    }
-
     setIsLoading(true)
 
     try {
       const newTransaction = await TransactionsAPI.create({
         user_id: user.user_id,
-        customer_name: isOrder ? formData.customerName.trim() : null,
-        customer_phone: isOrder ? formData.customerPhone.trim() || null : null,
-        notes: isOrder ? formData.notes.trim() || null : null,
-        status: "pending",
       })
 
-      // Reset form
-      setFormData({
-        customerName: "",
-        customerPhone: "",
-        notes: "",
-      })
       setOpen(false)
       toast.success("Transaksi baru berhasil dibuat!")
       onTransactionCreated(newTransaction.id)
@@ -69,10 +49,6 @@ export function CreateTransactionModal({ trigger, onTransactionCreated, isOrder 
     } finally {
       setIsLoading(false)
     }
-  }
-
-  const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
   return (
@@ -87,51 +63,9 @@ export function CreateTransactionModal({ trigger, onTransactionCreated, isOrder 
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {isOrder && (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="customerName">Nama Pelanggan *</Label>
-                <Input
-                  id="customerName"
-                  value={formData.customerName}
-                  onChange={(e) => handleInputChange("customerName", e.target.value)}
-                  placeholder="Contoh: Ibu Sari"
-                  className="border-pink-200 focus:border-pink-400"
-                  maxLength={255}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="customerPhone">Nomor Telepon</Label>
-                <Input
-                  id="customerPhone"
-                  type="tel"
-                  value={formData.customerPhone}
-                  onChange={(e) => handleInputChange("customerPhone", e.target.value)}
-                  placeholder="081234567890"
-                  className="border-pink-200 focus:border-pink-400"
-                  maxLength={50}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="notes">Catatan</Label>
-                <Textarea
-                  id="notes"
-                  value={formData.notes}
-                  onChange={(e) => handleInputChange("notes", e.target.value)}
-                  placeholder="Catatan tambahan untuk pesanan..."
-                  className="border-pink-200 focus:border-pink-400"
-                  rows={3}
-                />
-              </div>
-            </>
-          )}
-
           <div className="bg-blue-50 p-3 rounded-lg">
             <div className="text-sm text-blue-800">
-              <p className="font-medium">Admin: {user?.full_name || user?.username}</p>
+              <p className="font-medium">Admin: {user?.username}</p>
               <p className="text-xs text-blue-600 mt-1">
                 {isOrder
                   ? "Pesanan akan dicatat atas nama Anda sebagai admin."

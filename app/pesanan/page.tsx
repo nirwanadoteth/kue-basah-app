@@ -86,7 +86,7 @@ export default function TransactionsPage() {
   const filterTransactions = async () => {
     let filtered = transactions
 
-    // Apply search filter by transaction ID, customer name, or admin name
+    // Apply search filter by transaction ID, or admin name
     if (searchTerm && searchTerm.trim()) {
       const searchLower = searchTerm.toLowerCase()
       filtered = transactions.filter(
@@ -338,7 +338,6 @@ export default function TransactionsPage() {
                       className="border-b border-pink-50 hover:bg-gradient-to-r hover:from-pink-25 hover:to-purple-25 transition-all duration-200"
                     >
                       <td className="py-4 px-6 font-medium text-gray-900">#{transaction.id}</td>
-                      <td className="py-4 px-6 font-semibold text-gray-800">{transaction.customer_name || "-"}</td>
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-2">
                           <div className="w-8 h-8 rounded-full bg-gradient-to-r from-pink-200 to-purple-200 flex items-center justify-center">
