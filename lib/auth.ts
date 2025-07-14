@@ -90,7 +90,7 @@ export class AuthService {
     try {
       const { data, error } = await supabase
         .from("users")
-        .select("id as user_id, username")
+        .select("user_id:id, username")
         .order("created_at", { ascending: false });
 
       if (error) {

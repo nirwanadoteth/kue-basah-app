@@ -10,7 +10,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useInventoryStore } from "@/lib/store-supabase";
+import { useProductStore } from "@/lib/stores/product-store";
 import { Trash2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
@@ -26,7 +26,7 @@ export function DeleteProductModal({
   productName,
 }: DeleteProductModalProps) {
   const [open, setOpen] = useState(false);
-  const { deleteProduct, isLoading } = useInventoryStore();
+  const { deleteProduct, isLoading } = useProductStore();
 
   const handleDelete = async () => {
     try {
@@ -55,7 +55,7 @@ export function DeleteProductModal({
         <div className="space-y-4">
           <p className="text-gray-700">
             Apakah Anda yakin ingin menghapus produk{" "}
-            <span className="font-semibold">"{productName}"</span>? Tindakan ini
+            <span className="font-semibold">&quot;{productName}&quot;</span>? Tindakan ini
             tidak bisa dibatalkan.
           </p>
           <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 p-3 rounded-md flex items-start gap-2">

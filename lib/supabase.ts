@@ -1,4 +1,46 @@
 import { createClient } from "@supabase/supabase-js";
+import { PostgrestError } from "@supabase/postgrest-js";
+import type {
+  Product,
+  ProductInsert,
+  ProductUpdate,
+  Transaction,
+  TransactionDetail,
+  TransactionInsert,
+  TransactionUpdate,
+  TransactionWithDetails,
+  DailyReport,
+  AuthUser,
+  User,
+  UserInsert,
+  UserUpdate,
+  TransactionDetailInsert,
+  TransactionDetailUpdate,
+  DailyReportInsert,
+  DailyReportUpdate,
+  TransactionDetailWithProduct,
+} from "./types";
+
+export type {
+  Product,
+  ProductInsert,
+  ProductUpdate,
+  Transaction,
+  TransactionDetail,
+  TransactionInsert,
+  TransactionUpdate,
+  TransactionWithDetails,
+  DailyReport,
+  AuthUser,
+  User,
+  UserInsert,
+  UserUpdate,
+  TransactionDetailInsert,
+  TransactionDetailUpdate,
+  DailyReportInsert,
+  DailyReportUpdate,
+  TransactionDetailWithProduct,
+};
 
 // Check if environment variables are available
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -21,36 +63,44 @@ export const supabase = createClient(
   }
 );
 
+function isErrorWithMessage(error: unknown): error is { message: string } {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof (error as { message: string }).message === "string"
+  );
+}
+
 // Test connection — aman untuk lingkungan yang mem-block fetch
 export const testSupabaseConnection = async () => {
-  try {
-    // Jika variabel env belum diset atau placeholder → langsung gagal diam-diam
-    if (
-      !supabaseUrl ||
-      !supabaseAnonKey ||
-      supabaseUrl.includes("placeholder") ||
-      supabaseAnonKey.includes("placeholder")
-    ) {
-      return false;
-    }
+  // If env variables are not set or are placeholders, assume connection is not set up
+  if (
+    !supabaseUrl ||
+    !supabaseAnonKey ||
+    supabaseUrl.includes("placeholder") ||
+    supabaseAnonKey.includes("placeholder")
+  ) {
+    return false;
+  }
 
-    // Supabase query HEAD
-    const { error } = await supabase
+  try {
+    // Attempt a simple query to check connection and table existence
+    const { error }: { error: PostgrestError | null } = await supabase
       .from("products")
       .select("id", { head: true, count: "exact" });
 
-    // Bila ada error (termasuk TypeError: Failed to fetch) anggap koneksi gagal
     if (error) {
-      console.warn("Supabase connection check:", error.message ?? error);
+      console.warn("Supabase connection check failed:", error.message || JSON.stringify(error));
       return false;
     }
 
     return true;
-  } catch (err: any) {
-    // Tangani error jaringan (fetch gagal, CORS, dll.)
+  } catch (err: unknown) {
+    // Catch network errors (e.g., fetch failed, CORS issues)
     console.warn(
-      "Supabase connection test – network error:",
-      err?.message ?? err
+      "Supabase connection test - network error:",
+      isErrorWithMessage(err) ? err.message : JSON.stringify(err)
     );
     return false;
   }
@@ -65,141 +115,32 @@ export const checkTablesExist = async () => {
     "transaction_details",
     "daily_reports",
   ];
-  const results = [];
   let allTablesExist = true;
 
   for (const table of tables) {
     try {
-      const { data, error } = await supabase
+      const { error }: { error: PostgrestError | null } = await supabase
         .from(table)
         .select("count", { count: "exact", head: true });
 
       if (error) {
-        results.push({ table, exists: false, error: error.message });
+        console.warn(`Table '${table}' does not exist or is inaccessible:`, isErrorWithMessage(error) ? error.message : JSON.stringify(error));
         allTablesExist = false;
-      } else {
-        results.push({ table, exists: true });
+        // No need to continue checking if one table is missing
+        break;
       }
-    } catch (error) {
-      results.push({
-        table,
-        exists: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-      });
+    } catch (error: unknown) {
+      console.warn(
+        `Error checking table '${table}':`,
+        isErrorWithMessage(error) ? error.message : JSON.stringify(error)
+      );
       allTablesExist = false;
+      break;
     }
   }
 
   return {
     allTablesExist,
     needsSetup: !allTablesExist,
-    results,
   };
 };
-
-// Types matching the database schema
-
-// Products table
-export interface Product {
-  id: number;
-  name: string;
-  price: number;
-  current_stock: number;
-  min_stock: number;
-  total_value: number; // Generated column: current_stock * price
-  created_at: string;
-  updated_at: string;
-}
-
-// Users table
-export interface User {
-  id: number;
-  username: string;
-  password_hash: string;
-  created_at: string;
-  updated_at: string;
-  last_login: string | null;
-}
-
-// Transactions table (previously customer_transactions)
-export interface Transaction {
-  id: number;
-  user_id: number;
-  total_price: number;
-  created_at: string;
-  updated_at: string;
-  users?: { username?: string }; // For joins
-}
-
-// Transaction Details table
-export interface TransactionDetail {
-  id: number;
-  transaction_id: number;
-  product_id: number;
-  product_name: string;
-  product_price: number;
-  quantity: number;
-  subtotal: number; // Generated column: product_price * quantity
-  created_at: string;
-}
-
-// Daily reports table
-export interface DailyReport {
-  id: number;
-  report_date: string; // DATE type, default: CURRENT_DATE
-  total_stock: number;
-  total_sales: number;
-  total_value: number;
-  low_stock_items: number;
-  created_at: string;
-}
-
-// Insert/Update types
-export type ProductInsert = Omit<
-  Product,
-  "id" | "total_value" | "created_at" | "updated_at"
->;
-export type ProductUpdate = Partial<ProductInsert>;
-
-export type UserInsert = Omit<
-  User,
-  "id" | "created_at" | "updated_at" | "last_login"
->;
-export type UserUpdate = Partial<
-  Omit<User, "id" | "created_at" | "updated_at">
->;
-
-export type TransactionInsert = Omit<
-  Transaction,
-  "id" | "total_price" | "created_at" | "updated_at" | "users"
->;
-export type TransactionUpdate = Partial<
-  Omit<Transaction, "id" | "created_at" | "updated_at" | "users">
->;
-
-export type TransactionDetailInsert = Omit<
-  TransactionDetail,
-  "id" | "subtotal" | "created_at"
->;
-export type TransactionDetailUpdate = Partial<
-  Omit<TransactionDetail, "id" | "transaction_id" | "subtotal" | "created_at">
->;
-
-export type DailyReportInsert = Omit<DailyReport, "id" | "created_at">;
-export type DailyReportUpdate = Partial<Omit<DailyReport, "id" | "created_at">>;
-
-// Authentication response type (from authenticate_user function)
-export interface AuthUser {
-  user_id: number;
-  username: string;
-}
-
-// Transaction with details (for display)
-export interface TransactionWithDetails extends Transaction {
-  details: TransactionDetail[];
-}
-
-// Transaction detail with product info
-export interface TransactionDetailWithProduct extends TransactionDetail {
-  product?: Product;
-}

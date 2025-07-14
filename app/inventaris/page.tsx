@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useInventoryStore } from "@/lib/store-supabase";
+import { useProductStore } from "@/lib/stores/product-store";
 import { AddProductModal } from "@/components/add-product-modal";
 import { DeleteProductModal } from "@/components/delete-product-modal";
 import { EditProductModal } from "@/components/edit-product-modal";
@@ -29,15 +29,13 @@ export default function InventoryManagement() {
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
 
   const {
-    products,
     isLoading,
     error,
     updateStock,
-    deleteProduct,
     clearError,
     fetchProducts,
-    searchProducts,
-  } = useInventoryStore();
+    products,
+  } = useProductStore();
 
   useEffect(() => {
     const initializeData = async () => {
@@ -54,39 +52,18 @@ export default function InventoryManagement() {
   }, [fetchProducts]);
 
   useEffect(() => {
-    const filterProducts = async () => {
-      if (searchTerm.trim()) {
-        try {
-          const filtered = await searchProducts(searchTerm);
-          setFilteredProducts(filtered);
-        } catch (error) {
-          console.error("Search error:", error);
-          setFilteredProducts(products);
-        }
-      } else {
-        setFilteredProducts(products);
-      }
-    };
-
-    filterProducts();
-  }, [searchTerm, products, searchProducts]);
-
-  const handleDeleteProduct = async (
-    productId: number,
-    productName: string
-  ) => {
-    if (
-      window.confirm(
-        `Apakah Anda yakin ingin menghapus produk "${productName}"?`
-      )
-    ) {
-      try {
-        await deleteProduct(productId);
-      } catch (error) {
-        console.error("Error deleting product:", error);
-      }
+    if (searchTerm.trim()) {
+      const lowerCaseSearchTerm = searchTerm.toLowerCase();
+      const filtered = products.filter((product) =>
+        product.name.toLowerCase().includes(lowerCaseSearchTerm)
+      );
+      setFilteredProducts(filtered);
+    } else {
+      setFilteredProducts(products);
     }
-  };
+  }, [searchTerm, products]);
+
+  
 
   const handleUpdateStock = async (
     productId: number,
@@ -258,7 +235,7 @@ export default function InventoryManagement() {
                       {searchTerm ? (
                         <div>
                           <p className="mb-4">
-                            Tidak ada produk yang ditemukan untuk "{searchTerm}"
+                            Tidak ada produk yang ditemukan untuk &quot;{searchTerm}&quot;
                           </p>
                           <AddProductModal
                             trigger={

@@ -10,9 +10,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/lib/auth-context";
 import { TransactionsAPI } from "@/lib/api/transactions";
 import { ShoppingCart } from "lucide-react";
@@ -33,11 +30,12 @@ export function CreateTransactionModal({
   const [isLoading, setIsLoading] = useState(false);
 
   const { user } = useAuth();
+  const userId = user?.user_id;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!user) {
+    if (!userId) {
       toast.error("Anda harus login untuk membuat transaksi");
       return;
     }
@@ -46,7 +44,7 @@ export function CreateTransactionModal({
 
     try {
       const newTransaction = await TransactionsAPI.create({
-        user_id: user.user_id,
+        user_id: userId,
       });
 
       setOpen(false);

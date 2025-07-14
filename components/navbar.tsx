@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Cake, Sparkles, LogOut, User, Menu, X } from "lucide-react";
 import { useState } from "react";
+import { MobileNav } from "./mobile-nav";
 
 export function Navbar() {
   const pathname = usePathname();
@@ -33,7 +34,7 @@ export function Navbar() {
           </div>
           <div>
             <span className="text-2xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
-              NAY'S CAKE
+              NAY&apos;S CAKE
             </span>
             <p className="text-xs text-gray-500 -mt-1 hidden sm:block">
               Sweet Inventory Management
@@ -86,45 +87,11 @@ export function Navbar() {
         </div>
       </div>
 
-      {isMobileMenuOpen && (
-        <div className="md:hidden mt-4 pt-4 border-t border-pink-100">
-          <div className="flex flex-col space-y-2">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={`px-4 py-2 rounded-md text-base font-medium transition-colors ${
-                  pathname === item.href
-                    ? "bg-pink-100 text-pink-700"
-                    : "text-gray-700 hover:bg-pink-50"
-                }`}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </div>
-          <div className="mt-4 pt-4 border-t border-pink-100 flex flex-col space-y-3">
-            {user && (
-              <div className="flex items-center gap-3 px-4 text-base font-medium text-gray-700">
-                <User className="h-5 w-5" />
-                <span>{user.username}</span>
-              </div>
-            )}
-            <Button
-              onClick={() => {
-                logout();
-                setIsMobileMenuOpen(false);
-              }}
-              variant="ghost"
-              className="w-full justify-start text-red-600 hover:bg-red-50 hover:text-red-700 px-4 py-2 text-base font-medium"
-            >
-              <LogOut className="h-5 w-5 mr-3" />
-              Keluar
-            </Button>
-          </div>
-        </div>
-      )}
+      <MobileNav
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
+        navItems={navItems}
+      />
     </nav>
   );
 }

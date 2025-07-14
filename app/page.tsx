@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useInventoryStore } from "@/lib/store-supabase";
+import { useProductStore } from "@/lib/stores/product-store";
 import { AddProductModal } from "@/components/add-product-modal";
 import { DeleteProductModal } from "@/components/delete-product-modal";
 import { EditProductModal } from "@/components/edit-product-modal";
@@ -13,12 +13,12 @@ import {
   TrendingUp,
   Package,
   AlertTriangle,
-  Sparkles,
   RefreshCw,
   Edit,
   Trash2,
 } from "lucide-react";
 import { formatCurrency, safeString, safeParseInt } from "@/lib/utils";
+import type { Product } from "@/lib/supabase";
 import { useEffect } from "react";
 import { DatabaseSetupBanner } from "@/components/database-setup-banner";
 
@@ -32,9 +32,8 @@ export default function Dashboard() {
     getTotalValue,
     clearError,
     updateStock,
-    deleteProduct,
     fetchProducts,
-  } = useInventoryStore();
+  } = useProductStore();
 
   useEffect(() => {
     fetchProducts();
@@ -44,8 +43,8 @@ export default function Dashboard() {
   const totalStock = (() => {
     try {
       return getTotalStock() || 0;
-    } catch (error) {
-      console.error("Error getting total stock:", error);
+    } catch (err) {
+      console.error("Error getting total stock:", err);
       return 0;
     }
   })();
@@ -53,8 +52,8 @@ export default function Dashboard() {
   const lowStockItems = (() => {
     try {
       return getLowStockItems() || 0;
-    } catch (error) {
-      console.error("Error getting low stock items:", error);
+    } catch (err) {
+      console.error("Error getting low stock items:", err);
       return 0;
     }
   })();
@@ -62,8 +61,8 @@ export default function Dashboard() {
   const totalValue = (() => {
     try {
       return getTotalValue() || 0;
-    } catch (error) {
-      console.error("Error getting total value:", error);
+    } catch (err) {
+      console.error("Error getting total value:", err);
       return 0;
     }
   })();
@@ -102,8 +101,8 @@ export default function Dashboard() {
         color: "bg-green-100 text-green-800",
         icon: Package,
       };
-    } catch (error) {
-      console.error("Error getting stock status:", error);
+    } catch (err) {
+      console.error("Error getting stock status:", err);
       return {
         text: "Unknown",
         color: "bg-gray-100 text-gray-800",
@@ -116,27 +115,12 @@ export default function Dashboard() {
     try {
       clearError();
       await fetchProducts();
-    } catch (error) {
-      console.error("Error refreshing:", error);
+    } catch (err) {
+      console.error("Error refreshing:", err);
     }
   };
 
-  const handleDeleteProduct = async (
-    productId: number,
-    productName: string
-  ) => {
-    if (
-      window.confirm(
-        `Apakah Anda yakin ingin menghapus produk "${productName}"?`
-      )
-    ) {
-      try {
-        await deleteProduct(productId);
-      } catch (error) {
-        console.error("Error deleting product:", error);
-      }
-    }
-  };
+  
 
   const handleUpdateStock = async (
     productId: number,
@@ -325,7 +309,7 @@ export default function Dashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {safeProducts.map((item) => {
+                  {safeProducts.map((item: Product) => {
                     try {
                       const status = getStockStatus(
                         item.current_stock,

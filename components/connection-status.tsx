@@ -13,6 +13,57 @@ interface ConnectionState {
   error?: string;
 }
 
+interface StatusCardProps {
+  icon: React.ReactNode;
+  title: string;
+  message: string;
+  buttonText: string;
+  onButtonClick: () => void;
+  isButtonDisabled: boolean;
+  cardClassNames: string;
+  buttonClassNames: string;
+  titleClassNames: string;
+  messageClassNames: string;
+}
+
+function StatusCard({
+  icon,
+  title,
+  message,
+  buttonText,
+  onButtonClick,
+  isButtonDisabled,
+  cardClassNames,
+  buttonClassNames,
+  titleClassNames,
+  messageClassNames,
+}: StatusCardProps) {
+  return (
+    <Card
+      className={`fixed bottom-4 right-4 z-50 shadow-lg max-w-sm ${cardClassNames}`}
+    >
+      <CardContent className="p-4">
+        <div className="flex items-start gap-3">
+          {icon}
+          <div className="flex-1">
+            <p className={`text-sm font-medium ${titleClassNames}`}>{title}</p>
+            <p className={`text-xs mt-1 ${messageClassNames}`}>{message}</p>
+            <Button
+              onClick={onButtonClick}
+              size="sm"
+              variant="outline"
+              className={`mt-2 h-7 text-xs bg-transparent ${buttonClassNames}`}
+              disabled={isButtonDisabled}
+            >
+              {buttonText}
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export function ConnectionStatus() {
   const [state, setState] = useState<ConnectionState>({
     isConnected: null,
@@ -71,60 +122,36 @@ export function ConnectionStatus() {
   // Show connection issues
   if (!state.isConnected) {
     return (
-      <Card className="fixed bottom-4 right-4 z-50 bg-red-50 border-red-200 shadow-lg max-w-sm">
-        <CardContent className="p-4">
-          <div className="flex items-start gap-3">
-            <WifiOff className="h-5 w-5 text-red-500 mt-0.5" />
-            <div className="flex-1">
-              <p className="text-sm font-medium text-red-800">
-                Connection Issue
-              </p>
-              <p className="text-xs text-red-600 mt-1">
-                {state.error || "Cannot connect to Supabase database"}
-              </p>
-              <Button
-                onClick={checkConnection}
-                size="sm"
-                variant="outline"
-                className="mt-2 h-7 text-xs border-red-200 text-red-600 hover:bg-red-50 bg-transparent"
-                disabled={state.isChecking}
-              >
-                {state.isChecking ? "Checking..." : "Retry"}
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <StatusCard
+        icon={<WifiOff className="h-5 w-5 text-red-500 mt-0.5" />}
+        title="Connection Issue"
+        message={state.error || "Cannot connect to Supabase database"}
+        buttonText={state.isChecking ? "Checking..." : "Retry"}
+        onButtonClick={checkConnection}
+        isButtonDisabled={state.isChecking}
+        cardClassNames="bg-red-50 border-red-200"
+        buttonClassNames="border-red-200 text-red-600 hover:bg-red-50"
+        titleClassNames="text-red-800"
+        messageClassNames="text-red-600"
+      />
     );
   }
 
   // Show database setup needed
   if (state.isConnected && state.tablesExist === false) {
     return (
-      <Card className="fixed bottom-4 right-4 z-50 bg-yellow-50 border-yellow-200 shadow-lg max-w-sm">
-        <CardContent className="p-4">
-          <div className="flex items-start gap-3">
-            <Database className="h-5 w-5 text-yellow-500 mt-0.5" />
-            <div className="flex-1">
-              <p className="text-sm font-medium text-yellow-800">
-                Database Setup Needed
-              </p>
-              <p className="text-xs text-yellow-600 mt-1">
-                Tables need to be created in Supabase
-              </p>
-              <Button
-                onClick={checkConnection}
-                size="sm"
-                variant="outline"
-                className="mt-2 h-7 text-xs border-yellow-200 text-yellow-600 hover:bg-yellow-50 bg-transparent"
-                disabled={state.isChecking}
-              >
-                {state.isChecking ? "Checking..." : "Recheck"}
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <StatusCard
+        icon={<Database className="h-5 w-5 text-yellow-500 mt-0.5" />}
+        title="Database Setup Needed"
+        message="Tables need to be created in Supabase"
+        buttonText={state.isChecking ? "Checking..." : "Recheck"}
+        onButtonClick={checkConnection}
+        isButtonDisabled={state.isChecking}
+        cardClassNames="bg-yellow-50 border-yellow-200"
+        buttonClassNames="border-yellow-200 text-yellow-600 hover:bg-yellow-50"
+        titleClassNames="text-yellow-800"
+        messageClassNames="text-yellow-600"
+      />
     );
   }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -48,15 +48,27 @@ export default function TransactionsPage() {
     setShowDetailsModalForTransactionId,
   ] = useState<number | null>(null);
 
-  useEffect(() => {
-    initializeData();
+  const loadTransactions = useCallback(async () => {
+    try {
+      const transactionsData = await TransactionsAPI.getAll();
+      setTransactions(transactionsData);
+    } catch (error) {
+      console.error("Error loading transactions:", error);
+      throw error;
+    }
   }, []);
 
-  useEffect(() => {
-    filterTransactions();
-  }, [searchTerm, dateFilter, transactions]);
+  const loadStats = useCallback(async () => {
+    try {
+      const statsData = await TransactionsAPI.getStats();
+      setStats(statsData);
+    } catch (error) {
+      console.error("Error loading stats:", error);
+      // Don't throw here, stats are not critical
+    }
+  }, []);
 
-  const initializeData = async () => {
+  const initializeData = useCallback(async () => {
     try {
       setIsInitialLoading(true);
       setError(null);
@@ -69,29 +81,9 @@ export default function TransactionsPage() {
     } finally {
       setIsInitialLoading(false);
     }
-  };
+  }, [loadTransactions, loadStats]);
 
-  const loadTransactions = async () => {
-    try {
-      const transactionsData = await TransactionsAPI.getAll();
-      setTransactions(transactionsData);
-    } catch (error) {
-      console.error("Error loading transactions:", error);
-      throw error;
-    }
-  };
-
-  const loadStats = async () => {
-    try {
-      const statsData = await TransactionsAPI.getStats();
-      setStats(statsData);
-    } catch (error) {
-      console.error("Error loading stats:", error);
-      // Don't throw here, stats are not critical
-    }
-  };
-
-  const filterTransactions = async () => {
+  const filterTransactions = useCallback(() => {
     let filtered = transactions;
 
     // Apply search filter by transaction ID, or admin name
@@ -139,7 +131,15 @@ export default function TransactionsPage() {
     }
 
     setFilteredTransactions(filtered);
-  };
+  }, [transactions, searchTerm, dateFilter]);
+
+  useEffect(() => {
+    initializeData();
+  }, [initializeData]);
+
+  useEffect(() => {
+    filterTransactions();
+  }, [filterTransactions]);
 
   const handleRefresh = async () => {
     setIsLoading(true);

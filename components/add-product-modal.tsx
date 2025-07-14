@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useInventoryStore } from "@/lib/store-supabase";
+import { useProductStore } from "@/lib/stores/product-store";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 
@@ -22,70 +22,72 @@ interface AddProductModalProps {
 
 export function AddProductModal({ trigger }: AddProductModalProps) {
   const [open, setOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    price: "",
-    currentStock: "",
-    minStock: "20",
-  });
+  const [name, setName] = useState("");
+  const [price, setPrice] = useState("");
+  const [currentStock, setCurrentStock] = useState("");
+  const [minStock, setMinStock] = useState("20");
 
-  const { addProduct, isLoading } = useInventoryStore();
+  const { addProduct, isLoading } = useProductStore();
+
+  const validateInputs = (
+    name: string,
+    price: number,
+    currentStock: number,
+    minStock: number
+  ) => {
+    const errors: string[] = [];
+
+    if (!name.trim()) {
+      errors.push("Nama produk wajib diisi");
+    }
+
+    if (isNaN(price) || price <= 0) {
+      errors.push("Harga harus berupa angka yang valid dan lebih dari 0");
+    }
+
+    if (isNaN(currentStock) || currentStock < 0) {
+      errors.push("Stok awal harus berupa angka yang valid dan tidak negatif");
+    }
+
+    if (isNaN(minStock) || minStock < 0) {
+      errors.push("Stok minimum harus berupa angka yang valid dan tidak negatif");
+    }
+
+    return errors;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate inputs with proper null checks
-    if (!formData.name || !formData.name.trim()) {
-      toast.error("Nama produk wajib diisi");
-      return;
-    }
+    const priceValue = Number.parseFloat(price.trim());
+    const currentStockValue = Number.parseInt(currentStock.trim());
+    const minStockValue = Number.parseInt(minStock?.trim() || "20");
 
-    if (!formData.price || !formData.price.trim()) {
-      toast.error("Harga wajib diisi");
-      return;
-    }
+    const validationErrors = validateInputs(
+      name,
+      priceValue,
+      currentStockValue,
+      minStockValue
+    );
 
-    if (!formData.currentStock || !formData.currentStock.trim()) {
-      toast.error("Stok awal wajib diisi");
-      return;
-    }
-
-    const price = Number.parseFloat(formData.price.trim());
-    const currentStock = Number.parseInt(formData.currentStock.trim());
-    const minStock = Number.parseInt(formData.minStock?.trim() || "20");
-
-    if (isNaN(price) || price <= 0) {
-      toast.error("Harga harus berupa angka yang valid dan lebih dari 0");
-      return;
-    }
-
-    if (isNaN(currentStock) || currentStock < 0) {
-      toast.error("Stok awal harus berupa angka yang valid dan tidak negatif");
-      return;
-    }
-
-    if (isNaN(minStock) || minStock < 0) {
-      toast.error(
-        "Stok minimum harus berupa angka yang valid dan tidak negatif"
-      );
+    if (validationErrors.length > 0) {
+      validationErrors.forEach((error) => toast.error(error));
       return;
     }
 
     try {
       await addProduct({
-        name: formData.name.trim(),
-        price,
-        current_stock: currentStock,
-        min_stock: minStock,
+        name: name.trim(),
+        price: priceValue,
+        current_stock: currentStockValue,
+        min_stock: minStockValue,
       });
 
       // Reset form
-      setFormData({
-        name: "",
-        price: "",
-        currentStock: "",
-        minStock: "20",
-      });
+      setName("");
+      setPrice("");
+      setCurrentStock("");
+      setMinStock("20");
       setOpen(false);
       toast.success("Produk berhasil ditambahkan!");
     } catch (error) {
@@ -94,10 +96,6 @@ export function AddProductModal({ trigger }: AddProductModalProps) {
         error instanceof Error ? error.message : "Gagal menambahkan produk";
       toast.error(errorMessage);
     }
-  };
-
-  const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   return (
@@ -116,8 +114,8 @@ export function AddProductModal({ trigger }: AddProductModalProps) {
             <Label htmlFor="name">Nama Produk *</Label>
             <Input
               id="name"
-              value={formData.name}
-              onChange={(e) => handleInputChange("name", e.target.value)}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               placeholder="Contoh: Kue Lapis Legit"
               className="border-pink-200 focus:border-pink-400"
               maxLength={100}
@@ -132,8 +130,8 @@ export function AddProductModal({ trigger }: AddProductModalProps) {
               type="number"
               min="0"
               step="100"
-              value={formData.price}
-              onChange={(e) => handleInputChange("price", e.target.value)}
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
               placeholder="5000"
               className="border-pink-200 focus:border-pink-400"
               required
@@ -147,9 +145,9 @@ export function AddProductModal({ trigger }: AddProductModalProps) {
                 id="currentStock"
                 type="number"
                 min="0"
-                value={formData.currentStock}
+                value={currentStock}
                 onChange={(e) =>
-                  handleInputChange("currentStock", e.target.value)
+                  setCurrentStock(e.target.value)
                 }
                 placeholder="50"
                 className="border-pink-200 focus:border-pink-400"
@@ -163,8 +161,8 @@ export function AddProductModal({ trigger }: AddProductModalProps) {
                 id="minStock"
                 type="number"
                 min="0"
-                value={formData.minStock}
-                onChange={(e) => handleInputChange("minStock", e.target.value)}
+                value={minStock}
+                onChange={(e) => setMinStock(e.target.value)}
                 placeholder="20"
                 className="border-pink-200 focus:border-pink-400"
               />

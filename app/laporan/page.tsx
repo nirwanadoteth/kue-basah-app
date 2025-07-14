@@ -4,20 +4,20 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { useInventoryStore } from "@/lib/store-supabase";
+import { useProductStore } from "@/lib/stores/product-store";
+import { useTransactionStore } from "@/lib/stores/transaction-store";
+import { useReportStore } from "@/lib/stores/report-store";
 import { ReportsAPI } from "@/lib/api/reports";
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
   ResponsiveContainer,
   BarChart,
   Bar,
   PieChart,
   Pie,
   Cell,
+  CartesianGrid,
+  XAxis,
+  YAxis,
 } from "recharts";
 import {
   TrendingUp,
@@ -36,7 +36,7 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 const COLORS = ["#FF6B9D", "#C44569", "#F8B500", "#6C5CE7", "#00CEC9"];
 
 export default function Reports() {
-  const isMobile = useMediaQuery("(max-width: 768px)");
+  useMediaQuery("(max-width: 768px)");
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [analyticsData, setAnalyticsData] = useState<{
     stockTrend: Array<{ date: string; stock: number; value: number }>;
@@ -46,22 +46,17 @@ export default function Reports() {
     productDistribution: [],
   });
 
-  const {
-    products,
-    transactions,
-    isLoading,
-    error,
-    fetchProducts,
-    fetchTransactions,
-    getTotalStock,
-    getTotalValue,
-    clearError,
-  } = useInventoryStore();
+  const { products, fetchProducts, getTotalStock, getTotalValue, isLoading: productsLoading, error: productsError, clearError: clearProductsError } = useProductStore();
+  const { transactions, fetchTransactions, isLoading: transactionsLoading, error: transactionsError, clearError: clearTransactionsError } = useTransactionStore();
+  const { fetchReports, isLoading: reportsLoading, error: reportsError, clearError: clearReportsError } = useReportStore();
+
+  const isLoading = productsLoading || transactionsLoading || reportsLoading;
+  const error = productsError || transactionsError || reportsError;
 
   useEffect(() => {
     const initializeData = async () => {
       try {
-        await Promise.all([fetchProducts(), fetchTransactions()]);
+        await Promise.all([fetchProducts(), fetchTransactions(), fetchReports()]);
 
         // Fetch analytics data
         const analytics = await ReportsAPI.getAnalytics();
@@ -74,12 +69,14 @@ export default function Reports() {
     };
 
     initializeData();
-  }, [fetchProducts, fetchTransactions]);
+  }, [fetchProducts, fetchTransactions, fetchReports]);
 
   const handleRefresh = async () => {
-    clearError();
+    clearProductsError();
+    clearTransactionsError();
+    clearReportsError();
     try {
-      await Promise.all([fetchProducts(), fetchTransactions()]);
+      await Promise.all([fetchProducts(), fetchTransactions(), fetchReports()]);
 
       const analytics = await ReportsAPI.getAnalytics();
       setAnalyticsData(analytics);
@@ -133,6 +130,7 @@ export default function Reports() {
       </div>
     );
   }
+
 
   return (
     <div className="p-6 space-y-8 animate-fade-in">
@@ -335,7 +333,7 @@ export default function Reports() {
                         fill="#8884d8"
                         dataKey="stock"
                         label={({ name, percent }) =>
-                          `${name} ${(percent * 100).toFixed(0)}%`
+                          `${name} ${((percent || 0) * 100).toFixed(0)}%`
                         }
                       >
                         {analyticsData.productDistribution.map(
@@ -405,7 +403,7 @@ export default function Reports() {
       {/* Footer */}
       <div className="text-center text-sm text-gray-500 mt-12 flex items-center justify-center gap-2">
         <Sparkles className="h-4 w-4 text-pink-400" />
-        ©2025 Nay's Cake. All rights reserved.
+        ©2025 Nay&apos;s Cake. All rights reserved.
         <Sparkles className="h-4 w-4 text-purple-400" />
       </div>
     </div>

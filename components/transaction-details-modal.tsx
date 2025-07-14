@@ -1,7 +1,8 @@
 "use client";
 
 import type React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useTransactionActions } from "@/hooks/use-transaction-actions";
 import {
   Dialog,
   DialogContent,
@@ -19,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { TransactionsAPI } from "@/lib/api/transactions";
-import { useInventoryStore } from "@/lib/store-supabase";
+import { useProductStore } from "@/lib/stores/product-store";
 import {
   Plus,
   Minus,
@@ -47,33 +48,41 @@ export function TransactionDetailsModal({
   const [transaction, setTransaction] = useState<TransactionWithDetails | null>(
     null
   );
-  const [isLoading, setIsLoading] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState<string>("");
   const [quantity, setQuantity] = useState<string>("1");
 
-  const { products, fetchProducts } = useInventoryStore();
+  const { products, fetchProducts } = useProductStore();
+
+  const loadTransaction = useCallback(async () => {
+    try {
+      const transactionData = await TransactionsAPI.getById(transactionId);
+      setTransaction(transactionData);
+    } catch (error) {
+      console.error("Error loading transaction:", error);
+      toast.error("Gagal memuat detail transaksi");
+    }
+  }, [transactionId]);
+
+  const {
+    isLoading,
+    handleAddItem,
+    handleUpdateQuantity,
+    handleRemoveItem,
+    handleCompleteTransaction,
+  } = useTransactionActions({
+    transactionId,
+    onTransactionUpdated,
+    loadTransaction,
+  });
 
   useEffect(() => {
     if (open) {
       loadTransaction();
       fetchProducts();
     }
-  }, [open, transactionId, fetchProducts]);
+  }, [open, fetchProducts, loadTransaction]);
 
-  const loadTransaction = async () => {
-    try {
-      setIsLoading(true);
-      const transactionData = await TransactionsAPI.getById(transactionId);
-      setTransaction(transactionData);
-    } catch (error) {
-      console.error("Error loading transaction:", error);
-      toast.error("Gagal memuat detail transaksi");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleAddItem = async () => {
+  const handleAddItemClick = async () => {
     if (!selectedProductId || !quantity) {
       toast.error("Pilih produk dan masukkan jumlah");
       return;
@@ -84,105 +93,14 @@ export function TransactionDetailsModal({
       toast.error("Jumlah harus lebih dari 0");
       return;
     }
-
-    try {
-      setIsLoading(true);
-      await TransactionsAPI.addItem(
-        transactionId,
-        Number.parseInt(selectedProductId),
-        qty
-      );
-      await loadTransaction();
-      setSelectedProductId("");
-      setQuantity("1");
-      toast.success("Item berhasil ditambahkan");
-      onTransactionUpdated?.();
-    } catch (error) {
-      console.error("Error adding item:", error);
-      const errorMessage =
-        error instanceof Error ? error.message : "Gagal menambahkan item";
-      toast.error(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
+    await handleAddItem(Number.parseInt(selectedProductId), qty);
+    setSelectedProductId("");
+    setQuantity("1");
   };
 
-  const handleUpdateQuantity = async (
-    detailId: number,
-    newQuantity: number
-  ) => {
-    if (newQuantity <= 0) {
-      toast.error("Jumlah harus lebih dari 0");
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      await TransactionsAPI.updateItemQuantity(detailId, newQuantity);
-      await loadTransaction();
-      toast.success("Jumlah berhasil diperbarui");
-      onTransactionUpdated?.();
-    } catch (error) {
-      console.error("Error updating quantity:", error);
-      const errorMessage =
-        error instanceof Error ? error.message : "Gagal memperbarui jumlah";
-      toast.error(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleRemoveItem = async (detailId: number, productName: string) => {
-    if (!window.confirm(`Hapus ${productName} dari transaksi?`)) {
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      await TransactionsAPI.removeItem(detailId);
-      await loadTransaction();
-      toast.success("Item berhasil dihapus");
-      onTransactionUpdated?.();
-    } catch (error) {
-      console.error("Error removing item:", error);
-      const errorMessage =
-        error instanceof Error ? error.message : "Gagal menghapus item";
-      toast.error(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleCompleteTransaction = async () => {
-    if (!transaction || transaction.details.length === 0) {
-      toast.error("Transaksi harus memiliki minimal 1 item");
-      return;
-    }
-
-    if (
-      !window.confirm(
-        "Selesaikan transaksi ini? Stok akan dikurangi dan transaksi tidak dapat diubah lagi."
-      )
-    ) {
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      await TransactionsAPI.complete(transactionId);
-      await loadTransaction();
-      toast.success("Transaksi berhasil diselesaikan!");
-      onTransactionUpdated?.();
-    } catch (error) {
-      console.error("Error completing transaction:", error);
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Gagal menyelesaikan transaksi";
-      toast.error(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
+  const handleCompleteTransactionClick = async () => {
+    if (!transaction) return;
+    await handleCompleteTransaction(transaction);
   };
 
   const availableProducts = products.filter(
@@ -259,7 +177,7 @@ export function TransactionDetailsModal({
                   className="w-24"
                 />
                 <Button
-                  onClick={handleAddItem}
+                  onClick={handleAddItemClick}
                   disabled={isLoading || !selectedProductId}
                   className="cotton-candy-button from-blue-400 to-cyan-400"
                 >
@@ -350,7 +268,7 @@ export function TransactionDetailsModal({
               </Button>
               {transaction.details.length > 0 && (
                 <Button
-                  onClick={handleCompleteTransaction}
+                  onClick={handleCompleteTransactionClick}
                   disabled={isLoading}
                   className="flex-1 cotton-candy-button from-green-400 to-emerald-400"
                 >

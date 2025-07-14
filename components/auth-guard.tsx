@@ -17,32 +17,14 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const pathname = usePathname();
 
   useEffect(() => {
-    // Don't redirect if we're already on the login page
-    if (pathname === "/login") {
-      return;
-    }
-
-    // If not loading and not authenticated, redirect to login
-    if (!isLoading && !isAuthenticated) {
+    if (!isLoading && !isAuthenticated && pathname !== "/login") {
       router.push("/login");
     }
   }, [isAuthenticated, isLoading, router, pathname]);
 
-  // Show loading while checking authentication
-  if (isLoading) {
+  if (isLoading || (!isAuthenticated && pathname !== "/login")) {
     return <LoadingFallback />;
   }
 
-  // If on login page, always show children
-  if (pathname === "/login") {
-    return <>{children}</>;
-  }
-
-  // If not authenticated, don't render children (will redirect)
-  if (!isAuthenticated) {
-    return <LoadingFallback />;
-  }
-
-  // If authenticated, render children
   return <>{children}</>;
 }

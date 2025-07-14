@@ -20,16 +20,30 @@ export default function LoginForm() {
 
   const { login } = useAuth();
 
+  const validateLoginInputs = (username: string, password: string) => {
+    const errors: string[] = [];
+
+    if (!username.trim()) {
+      errors.push("Username wajib diisi");
+    }
+
+    if (!password) {
+      errors.push("Password wajib diisi");
+    }
+
+    return errors;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.username.trim()) {
-      toast.error("Username wajib diisi");
-      return;
-    }
+    const validationErrors = validateLoginInputs(
+      formData.username,
+      formData.password
+    );
 
-    if (!formData.password) {
-      toast.error("Password wajib diisi");
+    if (validationErrors.length > 0) {
+      validationErrors.forEach((error) => toast.error(error));
       return;
     }
 
@@ -62,7 +76,7 @@ export default function LoginForm() {
             </div>
           </div>
           <CardTitle className="text-3xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
-            NAY'S CAKE
+            NAY&apos;S CAKE
           </CardTitle>
           <p className="text-gray-600 mt-2">Masuk ke Sistem Inventaris</p>
         </CardHeader>

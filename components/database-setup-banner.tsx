@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,49 +9,46 @@ import {
   CheckCircle,
   ExternalLink,
 } from "lucide-react";
-import { useInventoryStore } from "@/lib/store-supabase";
+import { useProductStore } from "@/lib/stores/product-store";
 
 export function DatabaseSetupBanner() {
   const [isVisible, setIsVisible] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
-  const { needsSetup, error, fetchProducts } = useInventoryStore();
+  const { needsSetup, fetchProducts } = useProductStore();
+
+  const performDatabaseCheck = useCallback(async () => {
+    try {
+      setIsChecking(true);
+      await fetchProducts();
+      setIsVisible(false);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "";
+      const isSetupError =
+        errorMessage.includes("Database tables not found") ||
+        errorMessage.includes('relation "public.products" does not exist') ||
+        errorMessage.includes("JWT");
+
+      setIsVisible(isSetupError);
+    } finally {
+      setIsChecking(false);
+    }
+  }, [fetchProducts]);
 
   useEffect(() => {
-    const checkDatabaseSetup = async () => {
-      try {
-        setIsChecking(true);
-        await fetchProducts();
-        setIsVisible(false);
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : "";
-        const isSetupError =
-          errorMessage.includes("Database tables not found") ||
-          errorMessage.includes('relation "public.products" does not exist') ||
-          errorMessage.includes("JWT");
+    performDatabaseCheck();
 
-        setIsVisible(isSetupError);
-      } finally {
-        setIsChecking(false);
-      }
-    };
+    // Check connection every 60 seconds
+    const interval = setInterval(performDatabaseCheck, 60000);
 
-    checkDatabaseSetup();
-  }, [fetchProducts]);
+    return () => clearInterval(interval);
+  }, [fetchProducts, performDatabaseCheck]);
 
   const handleRunSetup = () => {
     window.open("/scripts/combined-database-setup.sql", "_blank");
   };
 
   const handleRetry = async () => {
-    setIsChecking(true);
-    try {
-      await fetchProducts();
-      setIsVisible(false);
-    } catch (error) {
-      console.error("Retry failed:", error);
-    } finally {
-      setIsChecking(false);
-    }
+    await performDatabaseCheck();
   };
 
   if (isChecking) {

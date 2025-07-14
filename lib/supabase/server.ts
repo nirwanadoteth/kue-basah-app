@@ -1,4 +1,4 @@
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from "next/headers";
 
 // Check if environment variables are available
@@ -16,34 +16,39 @@ export function createClient() {
   if (!isSupabaseConfigured) {
     console.warn("Supabase environment variables not properly configured");
     // Return a mock client that won't work but won't crash
-    return createSupabaseClient(
+    return createServerClient(
       "https://placeholder.supabase.co",
-      "placeholder-key"
+      "placeholder-key",
+      {
+        cookies: {
+            get() {
+                return undefined;
+            }
+        }
+      }
     );
   }
 
-  return createSupabaseClient(supabaseUrl!, supabaseAnonKey!, {
-    auth: {
-      persistSession: false, // Server-side doesn't need session persistence
-      autoRefreshToken: false,
-    },
+  const cookieStore = cookies()
+
+  return createServerClient(supabaseUrl!, supabaseAnonKey!, {
     cookies: {
       get(name: string) {
-        return cookies().get(name)?.value;
+        return cookieStore.get(name)?.value
       },
-      set(name: string, value: string, options: any) {
+      set(name: string, value: string, options: CookieOptions) {
         try {
-          cookies().set({ name, value, ...options });
-        } catch (error) {
+          cookieStore.set({ name, value, ...options })
+        } catch {
           // The `set` method was called from a Server Component.
           // This can be ignored if you have middleware refreshing
           // user sessions.
         }
       },
-      remove(name: string, options: any) {
+      remove(name: string, options: CookieOptions) {
         try {
-          cookies().set({ name, value: "", ...options });
-        } catch (error) {
+          cookieStore.set({ name, value: '', ...options })
+        } catch {
           // The `delete` method was called from a Server Component.
           // This can be ignored if you have middleware refreshing
           // user sessions.
@@ -71,8 +76,9 @@ export const testServerConnection = async () => {
     }
 
     return true;
-  } catch (err: any) {
-    console.warn("Server Supabase connection test failed:", err?.message);
+  } catch (err: unknown) {
+    const error = err as Error;
+    console.warn("Server Supabase connection test failed:", error?.message);
     return false;
   }
 };

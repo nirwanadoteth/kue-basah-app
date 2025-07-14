@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useInventoryStore } from "@/lib/store-supabase";
+import { useProductStore } from "@/lib/stores/product-store";
 import { Edit } from "lucide-react";
 import { toast } from "sonner";
 import type { Product } from "@/lib/supabase";
@@ -30,7 +30,29 @@ export function EditProductModal({ trigger, product }: EditProductModalProps) {
     minStock: "",
   });
 
-  const { updateProduct, isLoading } = useInventoryStore();
+  const { updateProduct, isLoading } = useProductStore();
+
+  const validateEditInputs = (
+    name: string,
+    price: number,
+    minStock: number
+  ) => {
+    const errors: string[] = [];
+
+    if (!name.trim()) {
+      errors.push("Nama produk wajib diisi");
+    }
+
+    if (isNaN(price) || price <= 0) {
+      errors.push("Harga harus berupa angka yang valid dan lebih dari 0");
+    }
+
+    if (isNaN(minStock) || minStock < 0) {
+      errors.push("Stok minimum harus berupa angka yang valid dan tidak negatif");
+    }
+
+    return errors;
+  };
 
   // Initialize form data when modal opens or product changes
   useEffect(() => {
@@ -46,34 +68,17 @@ export function EditProductModal({ trigger, product }: EditProductModalProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate inputs
-    if (!formData.name || !formData.name.trim()) {
-      toast.error("Nama produk wajib diisi");
-      return;
-    }
-
-    if (!formData.price || !formData.price.trim()) {
-      toast.error("Harga wajib diisi");
-      return;
-    }
-
-    if (!formData.minStock || !formData.minStock.trim()) {
-      toast.error("Stok minimum wajib diisi");
-      return;
-    }
-
     const price = Number.parseFloat(formData.price.trim());
     const minStock = Number.parseInt(formData.minStock.trim());
 
-    if (isNaN(price) || price <= 0) {
-      toast.error("Harga harus berupa angka yang valid dan lebih dari 0");
-      return;
-    }
+    const validationErrors = validateEditInputs(
+      formData.name,
+      price,
+      minStock
+    );
 
-    if (isNaN(minStock) || minStock < 0) {
-      toast.error(
-        "Stok minimum harus berupa angka yang valid dan tidak negatif"
-      );
+    if (validationErrors.length > 0) {
+      validationErrors.forEach((error) => toast.error(error));
       return;
     }
 
