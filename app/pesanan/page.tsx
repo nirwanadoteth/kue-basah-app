@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { TransactionsAPI } from "@/lib/api/transactions";
 import { CreateTransactionModal } from "@/components/create-transaction-modal";
-import { TransactionDetailsModal } from "@/components/transaction-details-modal";
 import { TableSkeleton } from "@/components/loading-skeleton";
 import {
   Search,
@@ -43,10 +42,9 @@ export default function TransactionsPage() {
     averageOrderValue: 0,
   });
   const [error, setError] = useState<string | null>(null);
-  const [
-    showDetailsModalForTransactionId,
-    setShowDetailsModalForTransactionId,
-  ] = useState<number | null>(null);
+  const [selectedTransactionId, setSelectedTransactionId] = useState<
+    number | null
+  >(null);
 
   const loadTransactions = useCallback(async () => {
     try {
@@ -161,12 +159,16 @@ export default function TransactionsPage() {
   const handleTransactionCreated = (transactionId: number) => {
     loadTransactions();
     loadStats();
-    setShowDetailsModalForTransactionId(transactionId);
+    setSelectedTransactionId(transactionId);
   };
 
   const handleTransactionUpdated = () => {
     loadTransactions();
     loadStats();
+  };
+
+  const handleModalClose = () => {
+    setSelectedTransactionId(null);
   };
 
   if (isInitialLoading) {
@@ -247,7 +249,9 @@ export default function TransactionsPage() {
               </Button>
             }
             onTransactionCreated={handleTransactionCreated}
+            onTransactionUpdated={handleTransactionUpdated}
             isOrder={true}
+            onClose={handleModalClose}
           />
         </div>
       </div>
@@ -403,18 +407,24 @@ export default function TransactionsPage() {
                         {formatDate(transaction.created_at)}
                       </td>
                       <td className="py-4 px-6">
-                        <TransactionDetailsModal
+                        <CreateTransactionModal
                           trigger={
                             <Button
                               size="sm"
                               className="cotton-candy-button from-blue-400 to-cyan-400 rounded-full px-3"
                               title="Lihat Detail"
+                              onClick={() =>
+                                setSelectedTransactionId(transaction.id)
+                              }
                             >
                               <Eye className="h-3 w-3" />
                             </Button>
                           }
                           transactionId={transaction.id}
+                          onTransactionCreated={handleTransactionCreated}
                           onTransactionUpdated={handleTransactionUpdated}
+                          isOrder={true}
+                          onClose={handleModalClose}
                         />
                       </td>
                     </tr>
@@ -437,17 +447,6 @@ export default function TransactionsPage() {
           real-time
         </p>
       </div>
-
-      {showDetailsModalForTransactionId && (
-        <TransactionDetailsModal
-          transactionId={showDetailsModalForTransactionId}
-          onTransactionUpdated={() => {
-            handleTransactionUpdated();
-            setShowDetailsModalForTransactionId(null); // Close after update
-          }}
-          trigger={<div className="hidden" />}
-        />
-      )}
     </div>
   );
 }

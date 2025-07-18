@@ -31,9 +31,10 @@ export class TransactionsAPI {
       )
       .order("created_at", { ascending: false });
 
-    if (transactionsError) handleSupabaseError(transactionsError, "Failed to fetch transactions");
+    if (transactionsError)
+      handleSupabaseError(transactionsError, "Failed to fetch transactions");
 
-    return (transactions || []).map(transaction => ({
+    return (transactions || []).map((transaction) => ({
       ...transaction,
       details: transaction.transaction_details || [],
       user_name: transaction.users?.username || "Unknown",
@@ -94,16 +95,13 @@ export class TransactionsAPI {
   }
 
   static async delete(id: number): Promise<void> {
-    const { error } = await supabase
-      .from("transactions")
-      .delete()
-      .eq("id", id);
+    const { error } = await supabase.from("transactions").delete().eq("id", id);
 
     if (error) handleSupabaseError(error, "Failed to delete transaction");
   }
 
   static async addItem(
-    transactionId: number,
+    transactionId: number | null,
     productId: number,
     quantity: number
   ): Promise<TransactionDetail> {
@@ -129,14 +127,19 @@ export class TransactionsAPI {
       .eq("id", detailId)
       .single();
 
-    if (getError) handleSupabaseError(getError, "Failed to get transaction detail");
+    if (getError)
+      handleSupabaseError(getError, "Failed to get transaction detail");
 
     const { error: deleteError } = await supabase
       .from("transaction_details")
       .delete()
       .eq("id", detailId);
 
-    if (deleteError) handleSupabaseError(deleteError, "Failed to remove item from transaction");
+    if (deleteError)
+      handleSupabaseError(
+        deleteError,
+        "Failed to remove item from transaction"
+      );
 
     await supabase.rpc("update_transaction_total", {
       p_transaction_id: detail.transaction_id,
@@ -158,7 +161,8 @@ export class TransactionsAPI {
       .eq("id", detailId)
       .single();
 
-    if (getError) handleSupabaseError(getError, "Failed to get transaction detail");
+    if (getError)
+      handleSupabaseError(getError, "Failed to get transaction detail");
 
     const { data, error } = await supabase
       .from("transaction_details")
@@ -197,13 +201,15 @@ export class TransactionsAPI {
     const { data: all, error: allError } = await supabase
       .from("transactions")
       .select("total_price");
-    if (allError) handleSupabaseError(allError, "Failed to fetch all transactions");
+    if (allError)
+      handleSupabaseError(allError, "Failed to fetch all transactions");
 
     const { data: todayData, error: todayError } = await supabase
       .from("transactions")
       .select("total_price")
       .gte("created_at", `${today}T00:00:00Z`);
-    if (todayError) handleSupabaseError(todayError, "Failed to fetch today's transactions");
+    if (todayError)
+      handleSupabaseError(todayError, "Failed to fetch today's transactions");
 
     const totalRevenue = (all || []).reduce(
       (sum, t) => sum + (t.total_price || 0),
@@ -241,13 +247,13 @@ export class TransactionsAPI {
       .lte("created_at", endDate)
       .order("created_at", { ascending: false });
 
-    if (error) handleSupabaseError(error, "Failed to fetch transactions by date range");
+    if (error)
+      handleSupabaseError(error, "Failed to fetch transactions by date range");
 
-    return (transactions || []).map(transaction => ({
+    return (transactions || []).map((transaction) => ({
       ...transaction,
       details: transaction.transaction_details || [],
       user_name: transaction.users?.username || "Unknown",
     }));
   }
 }
-
