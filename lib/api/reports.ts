@@ -127,4 +127,3 @@ export class ReportsAPI {
     return todayReport;
   }
 }
-

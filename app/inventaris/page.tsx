@@ -8,6 +8,7 @@ import { useProductStore } from "@/lib/stores/product-store";
 import { AddProductModal } from "@/components/add-product-modal";
 import { DeleteProductModal } from "@/components/delete-product-modal";
 import { EditProductModal } from "@/components/edit-product-modal";
+import { TableSkeleton } from "@/components/loading-skeleton";
 import {
   Search,
   Plus,
@@ -20,19 +21,21 @@ import {
 } from "lucide-react";
 import type { Product } from "@/lib/supabase";
 import { formatCurrency } from "@/lib/utils";
-import { getStockColorClass } from "@/lib/utils/stock-utils";
 import { DatabaseSetupBanner } from "@/components/database-setup-banner";
-import { InventoryLoadingFallback } from "@/components/inventory-loading-fallback";
-import { ErrorBanner } from "@/components/error-banner";
-import { EmptyProductTable } from "@/components/empty-product-table";
 
 export default function InventoryManagement() {
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
 
-  const { isLoading, error, updateStock, clearError, fetchProducts, products } =
-    useProductStore();
+  const {
+    isLoading,
+    error,
+    updateStock,
+    clearError,
+    fetchProducts,
+    products,
+  } = useProductStore();
 
   useEffect(() => {
     const initializeData = async () => {
@@ -60,6 +63,8 @@ export default function InventoryManagement() {
     }
   }, [searchTerm, products]);
 
+  
+
   const handleUpdateStock = async (
     productId: number,
     type: "addition" | "reduction"
@@ -77,13 +82,40 @@ export default function InventoryManagement() {
   };
 
   if (isInitialLoading) {
-    return <InventoryLoadingFallback />;
+    return (
+      <div className="p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <div className="h-8 w-64 bg-gradient-to-r from-pink-100 to-purple-100 rounded animate-pulse" />
+            <div className="h-4 w-96 bg-gradient-to-r from-pink-100 to-purple-100 rounded animate-pulse" />
+          </div>
+          <div className="h-10 w-64 bg-gradient-to-r from-pink-100 to-purple-100 rounded animate-pulse" />
+        </div>
+        <TableSkeleton />
+      </div>
+    );
   }
 
   return (
     <div className="p-6 space-y-8 animate-fade-in">
       {/* Error Banner */}
-      {error && <ErrorBanner error={error} onRefresh={handleRefresh} />}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Package className="h-5 w-5 text-red-500" />
+            <span className="text-red-700">{error}</span>
+          </div>
+          <Button
+            onClick={handleRefresh}
+            size="sm"
+            variant="outline"
+            className="border-red-200 text-red-600 hover:bg-red-50 bg-transparent"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Coba Lagi
+          </Button>
+        </div>
+      )}
 
       {/* Database Setup Banner */}
       <DatabaseSetupBanner />
@@ -197,7 +229,40 @@ export default function InventoryManagement() {
               </thead>
               <tbody>
                 {filteredProducts.length === 0 ? (
-                  <EmptyProductTable searchTerm={searchTerm} />
+                  <tr>
+                    <td colSpan={5} className="py-12 text-center text-gray-500">
+                      <Package className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                      {searchTerm ? (
+                        <div>
+                          <p className="mb-4">
+                            Tidak ada produk yang ditemukan untuk &quot;{searchTerm}&quot;
+                          </p>
+                          <AddProductModal
+                            trigger={
+                              <Button className="cotton-candy-button from-green-400 to-emerald-400 rounded-full px-6">
+                                <Plus className="h-4 w-4 mr-2" />
+                                Tambah Produk Baru
+                              </Button>
+                            }
+                          />
+                        </div>
+                      ) : (
+                        <div>
+                          <p className="mb-4">
+                            Belum ada produk. Tambahkan produk pertama Anda!
+                          </p>
+                          <AddProductModal
+                            trigger={
+                              <Button className="cotton-candy-button from-green-400 to-emerald-400 rounded-full px-6">
+                                <Plus className="h-4 w-4 mr-2" />
+                                Tambah Produk Pertama
+                              </Button>
+                            }
+                          />
+                        </div>
+                      )}
+                    </td>
+                  </tr>
                 ) : (
                   filteredProducts.map((item) => {
                     // Add safety check for item
@@ -228,9 +293,15 @@ export default function InventoryManagement() {
                         <td className="py-4 px-6">
                           <div className="flex items-center gap-2">
                             <span
-                              className={`font-bold text-lg ${getStockColorClass(
-                                item
-                              )}`}
+                              className={`font-bold text-lg ${
+                                (item.current_stock || 0) <=
+                                (item.min_stock || 0)
+                                  ? "text-red-500"
+                                  : (item.current_stock || 0) <=
+                                    (item.min_stock || 0) * 1.5
+                                  ? "text-yellow-500"
+                                  : "text-green-500"
+                              }`}
                             >
                               {item.current_stock || 0}
                             </span>
