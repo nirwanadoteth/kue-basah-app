@@ -21,7 +21,6 @@ import {
 } from "lucide-react";
 import type { Product } from "@/lib/supabase";
 import { formatCurrency } from "@/lib/utils";
-import { DatabaseSetupBanner } from "@/components/database-setup-banner";
 
 export default function InventoryManagement() {
   const [isInitialLoading, setIsInitialLoading] = useState(true);
@@ -108,9 +107,6 @@ export default function InventoryManagement() {
           </Button>
         </div>
       )}
-
-      {/* Database Setup Banner */}
-      <DatabaseSetupBanner />
 
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

@@ -21,7 +21,6 @@ import {
 } from "lucide-react";
 import type { TransactionWithDetails } from "@/lib/supabase";
 import { formatDate, formatCurrency } from "@/lib/utils";
-import { DatabaseSetupBanner } from "@/components/database-setup-banner";
 import { toast } from "sonner";
 
 export default function TransactionsPage() {
@@ -211,9 +210,6 @@ export default function TransactionsPage() {
           </Button>
         </div>
       )}
-
-      {/* Database Setup Banner */}
-      <DatabaseSetupBanner />
 
       {/* Header */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-4">
@@ -420,7 +416,7 @@ export default function TransactionsPage() {
                               <Eye className="h-3 w-3" />
                             </Button>
                           }
-                          transactionId={transaction.id}
+                          transactionId={selectedTransactionId}
                           onTransactionCreated={handleTransactionCreated}
                           onTransactionUpdated={handleTransactionUpdated}
                           isOrder={true}

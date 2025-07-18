@@ -18,12 +18,20 @@ export function DatabaseSetupBanner() {
   const { needsSetup, fetchProducts } = useProductStore();
 
   const performDatabaseCheck = useCallback(async () => {
+    const hasBeenChecked = sessionStorage.getItem("db_check_complete");
+
+    if (hasBeenChecked) {
+      setIsChecking(false);
+      return;
+    }
+
     try {
       setIsChecking(true);
       await fetchProducts();
       setIsVisible(false);
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
+      sessionStorage.setItem("db_check_complete", "true");
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "";
       const isSetupError =
@@ -39,12 +47,7 @@ export function DatabaseSetupBanner() {
 
   useEffect(() => {
     performDatabaseCheck();
-
-    // Check connection every 60 seconds
-    const interval = setInterval(performDatabaseCheck, 60000);
-
-    return () => clearInterval(interval);
-  }, [fetchProducts, performDatabaseCheck]);
+  }, [performDatabaseCheck]);
 
   const handleRunSetup = () => {
     window.open("/scripts/combined-database-setup.sql", "_blank");
