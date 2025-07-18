@@ -435,18 +435,6 @@ export default function TransactionsPage() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Summary */}
-      <div className="text-center text-sm text-gray-500 bg-blue-50 border border-blue-200 rounded-2xl p-4">
-        <div className="flex items-center justify-center gap-2">
-          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-          <span>Sistem Pesanan & Transaksi Aktif</span>
-        </div>
-        <p className="mt-2 text-xs">
-          Kelola semua jenis transaksi dengan mudah dan pantau pendapatan secara
-          real-time
-        </p>
-      </div>
     </div>
   );
 }

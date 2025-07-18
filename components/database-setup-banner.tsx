@@ -14,6 +14,7 @@ import { useProductStore } from "@/lib/stores/product-store";
 export function DatabaseSetupBanner() {
   const [isVisible, setIsVisible] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
+  const [showSuccess, setShowSuccess] = useState(false);
   const { needsSetup, fetchProducts } = useProductStore();
 
   const performDatabaseCheck = useCallback(async () => {
@@ -21,6 +22,8 @@ export function DatabaseSetupBanner() {
       setIsChecking(true);
       await fetchProducts();
       setIsVisible(false);
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "";
       const isSetupError =
@@ -64,7 +67,7 @@ export function DatabaseSetupBanner() {
     );
   }
 
-  if (!isVisible && !needsSetup) {
+  if (!isVisible && !needsSetup && showSuccess) {
     return (
       <Card className="border-green-200 bg-green-50">
         <CardContent className="p-4">

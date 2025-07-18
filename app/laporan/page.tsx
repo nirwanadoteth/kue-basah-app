@@ -425,12 +425,7 @@ export default function Reports() {
         </TabsContent>
       </Tabs>
 
-      {/* Footer */}
-      <div className="text-center text-sm text-gray-500 mt-12 flex items-center justify-center gap-2">
-        <Sparkles className="h-4 w-4 text-pink-400" />
-        ©2025 Nay&apos;s Cake. All rights reserved.
-        <Sparkles className="h-4 w-4 text-purple-400" />
-      </div>
+      
     </div>
   )
 }

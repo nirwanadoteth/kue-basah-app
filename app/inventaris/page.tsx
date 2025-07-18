@@ -28,14 +28,8 @@ export default function InventoryManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
 
-  const {
-    isLoading,
-    error,
-    updateStock,
-    clearError,
-    fetchProducts,
-    products,
-  } = useProductStore();
+  const { isLoading, error, updateStock, clearError, fetchProducts, products } =
+    useProductStore();
 
   useEffect(() => {
     const initializeData = async () => {
@@ -62,8 +56,6 @@ export default function InventoryManagement() {
       setFilteredProducts(products);
     }
   }, [searchTerm, products]);
-
-  
 
   const handleUpdateStock = async (
     productId: number,
@@ -235,7 +227,8 @@ export default function InventoryManagement() {
                       {searchTerm ? (
                         <div>
                           <p className="mb-4">
-                            Tidak ada produk yang ditemukan untuk &quot;{searchTerm}&quot;
+                            Tidak ada produk yang ditemukan untuk &quot;
+                            {searchTerm}&quot;
                           </p>
                           <AddProductModal
                             trigger={

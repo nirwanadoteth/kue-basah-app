@@ -120,8 +120,6 @@ export default function Dashboard() {
     }
   };
 
-  
-
   const handleUpdateStock = async (
     productId: number,
     type: "addition" | "reduction"
@@ -419,17 +417,6 @@ export default function Dashboard() {
           )}
         </CardContent>
       </Card>
-
-      {/* Connection Status */}
-      <div className="text-center text-sm text-gray-500 bg-blue-50 border border-blue-200 rounded-2xl p-4">
-        <div className="flex items-center justify-center gap-2">
-          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-          <span>Terhubung ke Supabase Database</span>
-        </div>
-        <p className="mt-2 text-xs">
-          Semua data disimpan secara real-time di cloud database
-        </p>
-      </div>
     </div>
   );
 }

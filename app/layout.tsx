@@ -5,6 +5,7 @@ import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
 import { AuthGuard } from "@/components/auth-guard";
 import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
 import { ConnectionStatus } from "@/components/connection-status";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { Toaster } from "sonner";
@@ -32,6 +33,7 @@ export default function RootLayout({
               <div className="min-h-screen">
                 <Navbar />
                 <main>{children}</main>
+                <Footer />
                 <ConnectionStatus />
               </div>
             </AuthGuard>
