@@ -77,7 +77,7 @@ CREATE TABLE transactions (
 CREATE TABLE transaction_details (
     id BIGSERIAL PRIMARY KEY,
     transaction_id BIGINT NOT NULL REFERENCES transactions (id) ON DELETE CASCADE,
-    product_id BIGINT NOT NULL REFERENCES products (id) ON DELETE RESTRICT,
+    product_id BIGINT REFERENCES products (id) ON DELETE SET NULL,
     product_name VARCHAR(255) NOT NULL,
     product_price DECIMAL(10, 2) NOT NULL,
     quantity INTEGER NOT NULL CHECK (quantity > 0),

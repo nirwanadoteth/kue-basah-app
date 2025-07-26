@@ -1,40 +1,35 @@
 -- V2: Security Hardening
 -- This script addresses security warnings from Supabase.
-
 -- ------------------------------------------------------------------
 -- 🔒 Row Level Security (RLS) for audit_log
 -- ------------------------------------------------------------------
-
 -- 1. Enable RLS on the audit_log table
 ALTER TABLE public.audit_log ENABLE ROW LEVEL SECURITY;
 
 -- 2. Create a restrictive default policy on audit_log
 -- This policy denies all access by default. More specific, permissive
 -- policies should be created for roles that need access.
-CREATE POLICY "Deny all access to audit_log" ON public.audit_log
-FOR ALL
-USING (false)
-WITH CHECK (false);
+DROP POLICY IF EXISTS "Deny all access to audit_log" ON public.audit_log;
+
+CREATE POLICY "Deny all access to audit_log" ON public.audit_log FOR ALL USING (false)
+WITH
+    CHECK (false);
 
 -- ------------------------------------------------------------------
 -- ⚙️ Secure Functions by Setting search_path
 -- ------------------------------------------------------------------
-
 -- Function to update updated_at timestamp
-CREATE OR REPLACE FUNCTION public.update_updated_at_column ()
-RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION public.update_updated_at_column () RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at = NOW();
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql
-SET search_path = public;
+SET
+    search_path = public;
 
 -- Function to authenticate user
-CREATE OR REPLACE FUNCTION public.authenticate_user (p_username VARCHAR, p_password VARCHAR)
-RETURNS TABLE (user_id BIGINT, username VARCHAR)
-SECURITY DEFINER
-AS $$
+CREATE OR REPLACE FUNCTION public.authenticate_user (p_username VARCHAR, p_password VARCHAR) RETURNS TABLE (user_id BIGINT, username VARCHAR) SECURITY DEFINER AS $$
 BEGIN
     RETURN QUERY
     SELECT u.id, u.username
@@ -44,11 +39,11 @@ BEGIN
     UPDATE users SET last_login = NOW() WHERE users.username = p_username;
 END;
 $$ LANGUAGE plpgsql
-SET search_path = public;
+SET
+    search_path = public;
 
 -- Function to calculate and update transaction total
-CREATE OR REPLACE FUNCTION public.update_transaction_total (p_transaction_id BIGINT)
-RETURNS DECIMAL(12, 2) AS $$
+CREATE OR REPLACE FUNCTION public.update_transaction_total (p_transaction_id BIGINT) RETURNS DECIMAL(12, 2) AS $$
 DECLARE
     v_new_total DECIMAL(12,2);
 BEGIN
@@ -64,15 +59,15 @@ BEGIN
     RETURN v_new_total;
 END;
 $$ LANGUAGE plpgsql
-SET search_path = public;
+SET
+    search_path = public;
 
 -- Function to add item to transaction
 CREATE OR REPLACE FUNCTION public.add_transaction_item (
     p_transaction_id BIGINT,
     p_product_id BIGINT,
     p_quantity INTEGER
-)
-RETURNS TABLE (
+) RETURNS TABLE (
     out_detail_id BIGINT,
     out_transaction_id BIGINT,
     out_product_id BIGINT,
@@ -80,8 +75,7 @@ RETURNS TABLE (
     out_product_price DECIMAL,
     out_quantity INTEGER,
     out_subtotal DECIMAL
-)
-AS $$
+) AS $$
 DECLARE
     v_product_name   VARCHAR(255);
     v_product_price  DECIMAL(10,2);
@@ -123,11 +117,11 @@ BEGIN
      WHERE td.id = v_detail_id;
 END;
 $$ LANGUAGE plpgsql
-SET search_path = public;
+SET
+    search_path = public;
 
 -- Function to complete transaction (reduce stock)
-CREATE OR REPLACE FUNCTION public.complete_transaction (p_transaction_id BIGINT)
-RETURNS BOOLEAN AS $$
+CREATE OR REPLACE FUNCTION public.complete_transaction (p_transaction_id BIGINT) RETURNS BOOLEAN AS $$
 DECLARE
     detail_record RECORD;
 BEGIN
@@ -148,11 +142,11 @@ BEGIN
     RETURN true;
 END;
 $$ LANGUAGE plpgsql
-SET search_path = public;
+SET
+    search_path = public;
 
 -- Function for the audit trigger
-CREATE OR REPLACE FUNCTION public.audit_trigger_function()
-RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION public.audit_trigger_function () RETURNS TRIGGER AS $$
 DECLARE
     v_old_data jsonb;
     v_new_data jsonb;
@@ -177,18 +171,20 @@ BEGIN
     RETURN NULL;
 END;
 $$ LANGUAGE plpgsql
-SET search_path = public;
+SET
+    search_path = public;
 
 -- Function to clean up old audit logs
-CREATE OR REPLACE FUNCTION public.cleanup_audit_logs()
-RETURNS void AS $$
+CREATE OR REPLACE FUNCTION public.cleanup_audit_logs () RETURNS void AS $$
 BEGIN
     DELETE FROM public.audit_log WHERE created_at < NOW() - INTERVAL '30 days';
 END;
 $$ LANGUAGE plpgsql
-SET search_path = public;
+SET
+    search_path = public;
 
 -- ------------------------------------------------------------------
 -- ✅ Verification
 -- ------------------------------------------------------------------
-SELECT 'V2 Security hardening script applied successfully!' as message;
+SELECT
+    'V2 Security hardening script applied successfully!' as message;
