@@ -24,6 +24,12 @@ type ChartContextProps = {
 
 const ChartContext = React.createContext<ChartContextProps | null>(null);
 
+/**
+ * Provides access to the current chart configuration context.
+ *
+ * Must be called within a `ChartContainer`; otherwise, an error is thrown.
+ * @returns The chart configuration context.
+ */
 function useChart() {
 	const context = React.useContext(ChartContext);
 
@@ -378,7 +384,16 @@ const ChartLegendContent = React.forwardRef<
 );
 ChartLegendContent.displayName = 'ChartLegend';
 
-// Helper to extract item config from a payload.
+/**
+ * Retrieves the chart configuration entry corresponding to a given payload item and key.
+ *
+ * Examines the payload and its nested `payload` property to resolve the appropriate config key, returning the matching config entry if found.
+ *
+ * @param config - The chart configuration mapping data keys to config entries
+ * @param payload - The Recharts payload item, possibly containing a nested `payload` object
+ * @param key - The key to use for config lookup
+ * @returns The matching config entry from `config`, or `undefined` if not found
+ */
 function getPayloadConfigFromPayload(
 	config: ChartConfig,
 	payload: unknown,

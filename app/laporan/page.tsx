@@ -49,6 +49,11 @@ const chartConfig = {
 	},
 };
 
+/**
+ * Displays the inventory report dashboard with data visualizations, analytics, and export functionality.
+ *
+ * Fetches and aggregates product, transaction, and report data, handles loading and error states, and renders interactive charts and summary cards. Allows users to refresh data and export the current inventory report as a CSV file.
+ */
 export default function Reports() {
 	useMediaQuery('(max-width: 768px)');
 	const [isInitialLoading, setIsInitialLoading] = useState(true);

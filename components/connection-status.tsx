@@ -26,6 +26,11 @@ interface StatusCardProps {
 	messageClassNames: string;
 }
 
+/**
+ * Displays a fixed-position status card with an icon, title, message, and action button.
+ *
+ * Used to present connection or setup status notifications, allowing users to trigger an action such as retrying or rechecking. Styling and content are customizable via props.
+ */
 function StatusCard({
 	icon,
 	title,
@@ -68,6 +73,11 @@ function StatusCard({
 	);
 }
 
+/**
+ * React component that monitors and displays the status of the Supabase database connection and required table existence.
+ *
+ * Renders a status card with error or setup messages if the connection fails or required tables are missing. Automatically checks the connection on mount and every 60 seconds, and allows manual rechecking via a button. Returns `null` if the connection and tables are healthy.
+ */
 export function ConnectionStatus() {
 	const [state, setState] = useState<ConnectionState>({
 		isConnected: null,

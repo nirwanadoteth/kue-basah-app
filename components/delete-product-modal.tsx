@@ -20,6 +20,15 @@ interface DeleteProductModalProps {
 	productName: string;
 }
 
+/**
+ * Renders a modal dialog for confirming and executing the deletion of a product.
+ *
+ * Displays a confirmation message with the product name, warns about permanent data loss, and provides actions to cancel or proceed with deletion. Shows success or error notifications based on the outcome.
+ *
+ * @param trigger - The React node that triggers the opening of the modal
+ * @param productId - The unique identifier of the product to delete
+ * @param productName - The name of the product to display in the confirmation dialog
+ */
 export function DeleteProductModal({
 	trigger,
 	productId,

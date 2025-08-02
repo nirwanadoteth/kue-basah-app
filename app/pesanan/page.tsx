@@ -25,6 +25,13 @@ import { formatDate, formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
 import { DatabaseSetupBanner } from '@/components/database-setup-banner';
 
+/**
+ * Displays the transactions management page, allowing users to view, filter, and manage transaction records with statistics, search, date filters, and modals for creating and viewing transaction details.
+ *
+ * Provides real-time statistics, error handling, and user notifications. Supports refreshing data, searching by transaction ID or admin username, and filtering by date range. Integrates modals for creating new transactions and viewing transaction details.
+ *
+ * @returns The rendered transactions management page component.
+ */
 export default function TransactionsPage() {
 	const [isInitialLoading, setIsInitialLoading] = useState(true);
 	const [isLoading, setIsLoading] = useState(false);

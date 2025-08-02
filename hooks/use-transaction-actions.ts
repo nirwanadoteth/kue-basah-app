@@ -9,6 +9,11 @@ interface UseTransactionActionsProps {
 	loadTransaction: () => Promise<void>;
 }
 
+/**
+ * Provides transaction-related action handlers with loading state and user feedback for use in React components.
+ *
+ * Returns an object containing `isLoading` and handler functions to add, update, remove, and complete transaction items. Each handler manages validation, API calls, transaction reloading, and user notifications.
+ */
 export function useTransactionActions({
 	transactionId,
 	onTransactionUpdated,

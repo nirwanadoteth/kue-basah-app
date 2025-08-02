@@ -20,6 +20,13 @@ interface AddProductModalProps {
 	trigger: React.ReactNode;
 }
 
+/**
+ * Renders a modal dialog for adding a new product with form inputs for name, price, current stock, and minimum stock.
+ *
+ * Displays validation errors as toast notifications and submits the product data using the product store. On successful addition, resets the form and shows a success message.
+ *
+ * @param trigger - The React node that triggers opening the modal when clicked
+ */
 export function AddProductModal({ trigger }: AddProductModalProps) {
 	const [open, setOpen] = useState(false);
 	const [name, setName] = useState('');

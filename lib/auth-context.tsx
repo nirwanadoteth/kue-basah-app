@@ -13,6 +13,13 @@ interface AuthContextType extends AuthState {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+/**
+ * Provides authentication state and methods to descendant components via React context.
+ *
+ * Wraps its children with an authentication context, managing user authentication state, login, logout, and user refresh operations. Ensures authentication state is initialized and kept up to date for the application.
+ *
+ * @param children - The React nodes to be rendered within the authentication context
+ */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
 	const [authState, setAuthState] = useState<AuthState>({
 		user: null,
@@ -88,6 +95,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	);
 }
 
+/**
+ * Provides access to the authentication context.
+ *
+ * Throws an error if called outside of an `AuthProvider`.
+ * @returns The current authentication context value
+ */
 export function useAuth() {
 	const context = useContext(AuthContext);
 	if (context === undefined) {

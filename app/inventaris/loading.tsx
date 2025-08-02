@@ -3,9 +3,9 @@
 import { TableSkeleton } from '@/components/loading-skeleton';
 
 /**
- * Loading fallback for /inventaris
- * Rendered automatically while the route’s React.lazy boundary
- * (triggered by useSearchParams()) is being resolved.
+ * Displays a skeleton UI as a loading placeholder for the inventory page.
+ *
+ * This component is shown automatically while the `/inventaris` route is loading, providing visual feedback with animated skeleton elements for the header and table content.
  */
 export default function InventoryLoading() {
 	return (
