@@ -1,84 +1,34 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-// Check if environment variables are available
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+/**
+ * Especially important if using Fluid compute: Don't put this client in a
+ * global variable. Always create a new client within each function when using
+ * it.
+ */
+export async function createClient() {
+  const cookieStore = await cookies();
 
-export const isSupabaseConfigured = !!(
-  supabaseUrl &&
-  supabaseAnonKey &&
-  !supabaseUrl.includes("placeholder") &&
-  !supabaseAnonKey.includes("placeholder")
-);
-
-export function createClient() {
-  if (!isSupabaseConfigured) {
-    console.warn("Supabase environment variables not properly configured");
-    // Return a mock client that won't work but won't crash
-    return createServerClient(
-      "https://placeholder.supabase.co",
-      "placeholder-key",
-      {
-        cookies: {
-            get() {
-                return undefined;
-            }
-        }
-      }
-    );
-  }
-
-  const cookieStore = cookies()
-
-  return createServerClient(supabaseUrl!, supabaseAnonKey!, {
-    cookies: {
-      get(name: string) {
-        return cookieStore.get(name)?.value
-      },
-      set(name: string, value: string, options: CookieOptions) {
-        try {
-          cookieStore.set({ name, value, ...options })
-        } catch {
-          // The `set` method was called from a Server Component.
-          // This can be ignored if you have middleware refreshing
-          // user sessions.
-        }
-      },
-      remove(name: string, options: CookieOptions) {
-        try {
-          cookieStore.set({ name, value: '', ...options })
-        } catch {
-          // The `delete` method was called from a Server Component.
-          // This can be ignored if you have middleware refreshing
-          // user sessions.
-        }
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options),
+            );
+          } catch {
+            // The `setAll` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
+          }
+        },
       },
     },
-  });
+  );
 }
-
-// Test server-side connection
-export const testServerConnection = async () => {
-  try {
-    if (!isSupabaseConfigured) {
-      return false;
-    }
-
-    const supabase = createClient();
-    const { error } = await supabase
-      .from("products")
-      .select("id", { head: true, count: "exact" });
-
-    if (error) {
-      console.warn("Server Supabase connection check:", error.message);
-      return false;
-    }
-
-    return true;
-  } catch (err: unknown) {
-    const error = err as Error;
-    console.warn("Server Supabase connection test failed:", error?.message);
-    return false;
-  }
-};
