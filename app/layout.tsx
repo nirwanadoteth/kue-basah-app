@@ -11,6 +11,8 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
+import { getPathname } from '@/lib/utils';
+import { get } from 'http';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -27,8 +29,7 @@ export default async function RootLayout({
 }) {
 	const supabase = await createClient();
 	const { data, error } = await supabase.auth.getUser();
-	const headersList = await headers();
-	const pathname = headersList.get('x-pathname') || '/';
+	const pathname = getPathname();
 
 	if (error || !data?.user) {
 		if (pathname !== '/login') {

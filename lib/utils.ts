@@ -1,6 +1,10 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
+export function getPathname() {
+	return typeof window !== 'undefined' ? window.location.pathname : '';
+}
+
 /**
  * Combines multiple class name values into a single optimized Tailwind CSS class string.
  *
