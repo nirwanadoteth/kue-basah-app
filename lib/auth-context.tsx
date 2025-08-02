@@ -1,14 +1,14 @@
 'use client';
 
 import type React from 'react';
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { AuthService, type AuthState } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 
 interface AuthContextType extends AuthState {
 	login: (username: string, password: string) => Promise<void>;
-	logout: () => void;
-	refreshUser: () => void;
+	logout: () => Promise<void>;
+	refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,35 +22,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 	const router = useRouter();
 
-	// Initialize auth state
-	useEffect(() => {
-		const initAuth = () => {
-			try {
-				const user = AuthService.getCurrentUser();
-				const isAuthenticated = AuthService.isAuthenticated();
-
-				setAuthState({
-					user,
-					isAuthenticated,
-					isLoading: false,
-				});
-			} catch (error) {
-				console.error('Auth initialization error:', error);
-				setAuthState({
-					user: null,
-					isAuthenticated: false,
-					isLoading: false,
-				});
-			}
-		};
-
-		// Only run on client side
-		if (typeof window !== 'undefined') {
-			initAuth();
-		} else {
-			setAuthState((prev) => ({ ...prev, isLoading: false }));
+	const refreshUser = useCallback(async () => {
+		try {
+			setAuthState((prev) => ({ ...prev, isLoading: true }));
+			const user = await AuthService.getCurrentUser();
+			setAuthState({
+				user,
+				isAuthenticated: !!user,
+				isLoading: false,
+			});
+		} catch (error) {
+			console.error('Failed to refresh user:', error);
+			setAuthState({
+				user: null,
+				isAuthenticated: false,
+				isLoading: false,
+			});
 		}
 	}, []);
+
+	useEffect(() => {
+		refreshUser();
+	}, [refreshUser]);
 
 	const login = async (username: string, password: string) => {
 		try {
@@ -64,7 +57,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 				isLoading: false,
 			});
 
-			// Redirect to dashboard after successful login
 			router.push('/');
 		} catch (error) {
 			setAuthState((prev) => ({ ...prev, isLoading: false }));
@@ -72,25 +64,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		}
 	};
 
-	const logout = () => {
-		AuthService.logout();
+	const logout = async () => {
+		await AuthService.logout();
 		setAuthState({
 			user: null,
 			isAuthenticated: false,
 			isLoading: false,
 		});
 		router.push('/login');
-	};
-
-	const refreshUser = () => {
-		const user = AuthService.getCurrentUser();
-		const isAuthenticated = AuthService.isAuthenticated();
-
-		setAuthState((prev) => ({
-			...prev,
-			user,
-			isAuthenticated,
-		}));
 	};
 
 	return (

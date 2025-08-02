@@ -30,22 +30,24 @@ export class AuthService {
 				throw new Error('Gagal melakukan autentikasi');
 			}
 
-			if (!data || data.length === 0) {
+			if (!data.user) {
 				throw new Error('Username atau password salah');
 			}
 
-			const user = data[0];
+			// Fetch user profile from the public 'users' table
+			const { data: profile, error: profileError } = await supabase
+				.from('users')
+				.select('user_id:id, username')
+				.eq('id', data.user.id)
+				.single();
 
-			// Store user data in localStorage
-			if (typeof window !== 'undefined') {
-				localStorage.setItem('auth_user', JSON.stringify(user));
-				localStorage.setItem(
-					'auth_token',
-					`${user.username}_${Date.now()}`
-				);
+			if (profileError || !profile) {
+				await supabase.auth.signOut(); // Sign out to prevent inconsistent state
+				console.error('Error fetching profile for authenticated user:', profileError);
+				throw new Error('Gagal mengambil profil pengguna setelah login.');
 			}
 
-			return user;
+			return profile;
 		} catch (error) {
 			console.error('Login error:', error);
 			throw error;
@@ -53,26 +55,32 @@ export class AuthService {
 	}
 
 	// Logout
-	static logout(): void {
-		if (typeof window !== 'undefined') {
-			localStorage.removeItem('auth_user');
-			localStorage.removeItem('auth_token');
-		}
+	static async logout(): Promise<void> {
+		await supabase.auth.signOut();
 	}
 
-	// Get current user from localStorage
-	static getCurrentUser(): User | null {
+	// Get current user from Supabase session
+	static async getCurrentUser(): Promise<User | null> {
 		try {
-			if (typeof window === 'undefined') return null;
+			const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-			const userStr = localStorage.getItem('auth_user');
-			const token = localStorage.getItem('auth_token');
-
-			if (!userStr || !token) {
+			if (userError || !user) {
+				if (userError) console.error('Error fetching user:', userError);
 				return null;
 			}
 
-			return JSON.parse(userStr);
+			const { data: profile, error: profileError } = await supabase
+				.from('users')
+				.select('user_id:id, username')
+				.eq('id', user.id)
+				.single();
+
+			if (profileError || !profile) {
+				if (profileError) console.warn('User session found but no profile in DB:', profileError.message);
+				return null;
+			}
+
+			return profile;
 		} catch (error) {
 			console.error('Error getting current user:', error);
 			return null;
@@ -80,12 +88,9 @@ export class AuthService {
 	}
 
 	// Check if user is authenticated
-	static isAuthenticated(): boolean {
-		if (typeof window === 'undefined') return false;
-
-		const user = this.getCurrentUser();
-		const token = localStorage.getItem('auth_token');
-		return !!(user && token);
+	static async isAuthenticated(): Promise<boolean> {
+		const user = await this.getCurrentUser();
+		return !!user;
 	}
 
 	// Get all users (admin only)
