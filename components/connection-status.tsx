@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { testSupabaseConnection, checkTablesExist } from '@/lib/supabase';
 import { WifiOff, Database } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -75,7 +75,7 @@ export function ConnectionStatus() {
 		isChecking: false,
 	});
 
-	const checkConnection = async () => {
+	const checkConnection = useCallback(async () => {
 		setState((prev) => ({ ...prev, isChecking: true }));
 
 		try {
@@ -110,7 +110,7 @@ export function ConnectionStatus() {
 						: 'Connection failed',
 			});
 		}
-	};
+	}, []);
 
 	useEffect(() => {
 		checkConnection();
@@ -119,7 +119,7 @@ export function ConnectionStatus() {
 		const interval = setInterval(checkConnection, 60000);
 
 		return () => clearInterval(interval);
-	}, []);
+	}, [checkConnection]);
 
 	// Don't show anything while initial check or if everything is working
 	if (
