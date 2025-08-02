@@ -1,63 +1,63 @@
-"use client";
+'use client';
 
-import { create } from "zustand";
-import { ReportsAPI } from "@/lib/api/reports";
-import type {
-  DailyReport,
-} from "@/lib/supabase";
-import { toast } from "sonner";
+import { create } from 'zustand';
+import { ReportsAPI } from '@/lib/api/reports';
+import type { DailyReport } from '@/lib/supabase';
+import { toast } from 'sonner';
 
 interface ReportStore {
-  // State
-  dailyReports: DailyReport[];
-  isLoading: boolean;
-  error: string | null;
-  needsSetup: boolean;
+	// State
+	dailyReports: DailyReport[];
+	isLoading: boolean;
+	error: string | null;
+	needsSetup: boolean;
 
-  // Actions
-  fetchReports: () => Promise<void>;
+	// Actions
+	fetchReports: () => Promise<void>;
 
-  // Utility
-  setLoading: (loading: boolean) => void;
-  setError: (error: string | null) => void;
-  setNeedsSetup: (needsSetup: boolean) => void;
-  clearError: () => void;
+	// Utility
+	setLoading: (loading: boolean) => void;
+	setError: (error: string | null) => void;
+	setNeedsSetup: (needsSetup: boolean) => void;
+	clearError: () => void;
 }
 
 export const useReportStore = create<ReportStore>()((set) => ({
-  // Initial state
-  dailyReports: [],
-  isLoading: false,
-  error: null,
-  needsSetup: false,
+	// Initial state
+	dailyReports: [],
+	isLoading: false,
+	error: null,
+	needsSetup: false,
 
-  // Fetch data
-  fetchReports: async () => {
-    try {
-      set({ isLoading: true, error: null, needsSetup: false });
-      const dailyReports = await ReportsAPI.getDailyReports();
-      set({ dailyReports, isLoading: false });
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Failed to fetch reports";
-      const isSetupError =
-        errorMessage.includes("Database tables not found") ||
-        errorMessage.includes(
-          'relation "public.daily_reports" does not exist'
-        );
-      set({
-        error: isSetupError ? "Database setup required" : errorMessage,
-        isLoading: false,
-        needsSetup: isSetupError,
-      });
-      if (!isSetupError) toast.error(errorMessage);
-      throw error;
-    }
-  },
+	// Fetch data
+	fetchReports: async () => {
+		try {
+			set({ isLoading: true, error: null, needsSetup: false });
+			const dailyReports = await ReportsAPI.getDailyReports();
+			set({ dailyReports, isLoading: false });
+		} catch (error) {
+			const errorMessage =
+				error instanceof Error
+					? error.message
+					: 'Failed to fetch reports';
+			const isSetupError =
+				errorMessage.includes('Database tables not found') ||
+				errorMessage.includes(
+					'relation "public.daily_reports" does not exist'
+				);
+			set({
+				error: isSetupError ? 'Database setup required' : errorMessage,
+				isLoading: false,
+				needsSetup: isSetupError,
+			});
+			if (!isSetupError) toast.error(errorMessage);
+			throw error;
+		}
+	},
 
-  // Utility
-  setLoading: (loading) => set({ isLoading: loading }),
-  setError: (error) => set({ error }),
-  setNeedsSetup: (needsSetup) => set({ needsSetup }),
-  clearError: () => set({ error: null }),
+	// Utility
+	setLoading: (loading) => set({ isLoading: loading }),
+	setError: (error) => set({ error }),
+	setNeedsSetup: (needsSetup) => set({ needsSetup }),
+	clearError: () => set({ error: null }),
 }));

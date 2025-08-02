@@ -1,107 +1,115 @@
-import { supabase } from "@/lib/supabase";
+import { supabase } from '@/lib/supabase';
 
 export interface User {
-  user_id: number;
-  username: string;
+	user_id: number;
+	username: string;
 }
 
 export interface AuthState {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
+	user: User | null;
+	isAuthenticated: boolean;
+	isLoading: boolean;
 }
 
 export class AuthService {
-  // Login with username and password
-  static async login(username: string, password: string): Promise<User> {
-    try {
-      if (!username || !password) {
-        throw new Error("Username dan password wajib diisi");
-      }
+	// Login with username and password
+	static async login(username: string, password: string): Promise<User> {
+		try {
+			if (!username || !password) {
+				throw new Error('Username dan password wajib diisi');
+			}
 
-      // Call the authentication function with plain password
-      const { data, error } = await supabase.rpc("authenticate_user", {
-        p_username: username.trim().toLowerCase(),
-        p_password: password, // Using plain password for now
-      });
+			// Call the authentication function with plain password
+			const { data, error } = await supabase.auth.signInWithPassword({
+				email: username.trim().toLowerCase(),
+				password,
+			});
 
-      if (error) {
-        console.error("Authentication error:", error);
-        throw new Error("Gagal melakukan autentikasi");
-      }
+			if (error) {
+				console.error('Authentication error:', error);
+				throw new Error('Gagal melakukan autentikasi');
+			}
 
-      if (!data || data.length === 0) {
-        throw new Error("Username atau password salah");
-      }
+			if (!data.user) {
+				throw new Error('Username atau password salah');
+			}
 
-      const user = data[0];
+			// Fetch user profile from the public 'users' table
+			const { data: profile, error: profileError } = await supabase
+				.from('users')
+				.select('user_id:id, username')
+				.eq('id', data.user.id)
+				.single();
 
-      // Store user data in localStorage
-      if (typeof window !== "undefined") {
-        localStorage.setItem("auth_user", JSON.stringify(user));
-        localStorage.setItem("auth_token", `${user.username}_${Date.now()}`);
-      }
+			if (profileError || !profile) {
+				await supabase.auth.signOut(); // Sign out to prevent inconsistent state
+				console.error('Error fetching profile for authenticated user:', profileError);
+				throw new Error('Gagal mengambil profil pengguna setelah login.');
+			}
 
-      return user;
-    } catch (error) {
-      console.error("Login error:", error);
-      throw error;
-    }
-  }
+			return profile;
+		} catch (error) {
+			console.error('Login error:', error);
+			throw error;
+		}
+	}
 
-  // Logout
-  static logout(): void {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("auth_user");
-      localStorage.removeItem("auth_token");
-    }
-  }
+	// Logout
+	static async logout(): Promise<void> {
+		await supabase.auth.signOut();
+	}
 
-  // Get current user from localStorage
-  static getCurrentUser(): User | null {
-    try {
-      if (typeof window === "undefined") return null;
+	// Get current user from Supabase session
+	static async getCurrentUser(): Promise<User | null> {
+		try {
+			const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-      const userStr = localStorage.getItem("auth_user");
-      const token = localStorage.getItem("auth_token");
+			if (userError || !user) {
+				if (userError) console.error('Error fetching user:', userError);
+				return null;
+			}
 
-      if (!userStr || !token) {
-        return null;
-      }
+			const { data: profile, error: profileError } = await supabase
+				.from('users')
+				.select('user_id:id, username')
+				.eq('id', user.id)
+				.single();
 
-      return JSON.parse(userStr);
-    } catch (error) {
-      console.error("Error getting current user:", error);
-      return null;
-    }
-  }
+			if (profileError || !profile) {
+				if (profileError) console.warn('User session found but no profile in DB:', profileError.message);
+				return null;
+			}
 
-  // Check if user is authenticated
-  static isAuthenticated(): boolean {
-    if (typeof window === "undefined") return false;
+			return profile;
+		} catch (error) {
+			console.error('Error getting current user:', error);
+			return null;
+		}
+	}
 
-    const user = this.getCurrentUser();
-    const token = localStorage.getItem("auth_token");
-    return !!(user && token);
-  }
+	// Check if user is authenticated
+	static async isAuthenticated(): Promise<boolean> {
+		const user = await this.getCurrentUser();
+		return !!user;
+	}
 
-  // Get all users (admin only)
-  static async getAllUsers(): Promise<User[]> {
-    try {
-      const { data, error } = await supabase
-        .from("users")
-        .select("user_id:id, username")
-        .order("created_at", { ascending: false });
+	// Get all users (admin only)
+	static async getAllUsers(): Promise<User[]> {
+		try {
+			const { data, error } = await supabase
+				.from('users')
+				.select('user_id:id, username')
+				.order('created_at', { ascending: false });
 
-      if (error) {
-        console.error("Get users error:", error);
-        throw new Error("Gagal mengambil data pengguna");
-      }
+			if (error) {
+				console.error('Get users error:', error);
+				throw new Error('Gagal mengambil data pengguna');
+			}
 
-      return data || [];
-    } catch (error) {
-      console.error("Get all users error:", error);
-      throw error;
-    }
-  }
+			return data || [];
+		} catch (error) {
+			console.error('Get all users error:', error);
+			throw error;
+		}
+	}
 }

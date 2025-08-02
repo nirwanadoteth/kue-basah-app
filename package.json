@@ -3,11 +3,10 @@
 	"version": "0.1.0",
 	"private": true,
 	"scripts": {
+		"dev": "next dev --turbopack",
 		"build": "next build",
-		"dev": "next dev",
-		"lint": "eslint .",
 		"start": "next start",
-		"db:reset": "npm exec supabase db reset"
+		"lint": "next lint"
 	},
 	"dependencies": {
 		"@hookform/resolvers": "^3.9.1",
