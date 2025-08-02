@@ -23,6 +23,13 @@ import type { Product } from '@/lib/supabase';
 import { formatCurrency } from '@/lib/utils';
 import { DatabaseSetupBanner } from '@/components/database-setup-banner';
 
+/**
+ * Displays and manages the inventory of products, providing features for searching, adding, editing, deleting, and updating stock.
+ *
+ * Fetches product data on mount, filters products by search term, and renders summary statistics and an inventory table with interactive controls for stock management and product CRUD operations. Handles loading and error states, and includes a database setup banner.
+ *
+ * @returns The rendered inventory management UI component.
+ */
 export default function InventoryManagement() {
 	const [isInitialLoading, setIsInitialLoading] = useState(true);
 	const [searchTerm, setSearchTerm] = useState('');

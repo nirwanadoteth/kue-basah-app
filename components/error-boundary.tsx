@@ -60,6 +60,14 @@ export class ErrorBoundary extends React.Component<
 	}
 }
 
+/**
+ * Displays a user-friendly fallback UI when an error is caught by an error boundary.
+ *
+ * Shows error details for developers and provides options to refresh the page or retry rendering.
+ *
+ * @param error - The error object that was caught
+ * @param resetError - Callback to reset the error state and attempt recovery
+ */
 function DefaultErrorFallback({
 	error,
 	resetError,
@@ -110,7 +118,11 @@ function DefaultErrorFallback({
 	);
 }
 
-// Hook untuk menangani error di functional components
+/**
+ * Returns a callback for handling errors in functional React components.
+ *
+ * The returned function logs the provided error and optional component stack trace to the console.
+ */
 export function useErrorHandler() {
 	return (error: Error, errorInfo?: { componentStack: string }) => {
 		console.error('Error caught by useErrorHandler:', error, errorInfo);

@@ -11,6 +11,13 @@ interface AuthGuardProps {
 	children: React.ReactNode;
 }
 
+/**
+ * Protects child components by enforcing authentication, redirecting unauthenticated users to the login page.
+ *
+ * Renders a loading fallback while authentication status is being determined or when redirecting unauthenticated users.
+ *
+ * @param children - The components to render if the user is authenticated
+ */
 export function AuthGuard({ children }: AuthGuardProps) {
 	const { isAuthenticated, isLoading } = useAuth();
 	const router = useRouter();

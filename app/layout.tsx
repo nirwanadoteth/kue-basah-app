@@ -19,6 +19,13 @@ export const metadata: Metadata = {
 	generator: 'v0.dev',
 };
 
+/**
+ * Defines the root layout for the application, providing global context, error boundaries, authentication, and shared UI components.
+ *
+ * Wraps all pages with authentication, error handling, navigation, footer, connection status, and toast notifications.
+ *
+ * @param children - The page content to render within the layout
+ */
 export default function RootLayout({
 	children,
 }: {

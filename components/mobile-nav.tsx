@@ -12,6 +12,15 @@ interface MobileNavProps {
 	navItems: { href: string; label: string }[];
 }
 
+/**
+ * Renders a mobile navigation menu with navigation links and user actions.
+ *
+ * Displays a list of navigation items and, if a user is logged in, shows the username and a logout button. The menu is visible only when `isOpen` is true. Selecting a navigation link or logging out will close the menu.
+ *
+ * @param isOpen - Whether the mobile navigation menu is visible
+ * @param onClose - Callback invoked to close the menu
+ * @param navItems - Array of navigation items to display in the menu
+ */
 export function MobileNav({ isOpen, onClose, navItems }: MobileNavProps) {
 	const pathname = usePathname();
 	const { user, logout } = useAuth();

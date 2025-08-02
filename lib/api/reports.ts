@@ -1,6 +1,14 @@
 import { supabase, type DailyReport } from '@/lib/supabase';
 
-// Helper function to handle Supabase errors
+/**
+ * Handles Supabase errors by logging them and throwing a descriptive error.
+ *
+ * If the error indicates missing database tables, throws a specific error instructing to run the setup script. Otherwise, throws a generic error with the provided message and the original error message.
+ *
+ * @param error - The error object from Supabase
+ * @param message - Contextual message describing the operation that failed
+ * @throws If a Supabase error occurs, always throws an error with additional context
+ */
 function handleSupabaseError(error: Error, message: string): never {
 	console.error(`Supabase error ${message}:`, error);
 	if (

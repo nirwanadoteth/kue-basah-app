@@ -5,7 +5,11 @@ import {
 	type ProductUpdate,
 } from '@/lib/supabase';
 
-// Helper function to handle Supabase errors
+/**
+ * Handles Supabase errors by logging the error and throwing a descriptive exception.
+ *
+ * If the error message indicates missing database tables, throws an error instructing to run the setup script. Otherwise, throws a generic error with the provided message and the original error details.
+ */
 function handleSupabaseError(error: Error, message: string): never {
 	console.error(`Supabase error ${message}:`, error);
 	if (error.message.includes('relation "public.products" does not exist')) {

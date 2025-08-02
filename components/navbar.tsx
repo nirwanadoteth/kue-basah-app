@@ -8,6 +8,11 @@ import { Cake, Sparkles, LogOut, User, Menu, X } from 'lucide-react';
 import { useState } from 'react';
 import { MobileNav } from './mobile-nav';
 
+/**
+ * Renders the main navigation bar for authenticated users, including navigation links, user info, logout button, and a responsive mobile menu.
+ *
+ * The navbar is hidden on the login page and when the user is not authenticated.
+ */
 export function Navbar() {
 	const pathname = usePathname();
 	const { user, logout, isAuthenticated } = useAuth();

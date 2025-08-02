@@ -1,6 +1,14 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
+/**
+ * Handles Supabase authentication session management for incoming requests in a Next.js server environment.
+ *
+ * Creates a new Supabase server client per request, synchronizes authentication cookies between the request and response, and retrieves the current user's authentication claims. If the user is unauthenticated and attempts to access protected routes, redirects them to the login page. Returns a response object with updated session cookies to maintain session consistency.
+ *
+ * @param request - The incoming Next.js request object to process for session management.
+ * @returns A NextResponse object with updated authentication cookies or a redirect to the login page if unauthenticated.
+ */
 export async function updateSession(request: NextRequest) {
 	let supabaseResponse = NextResponse.next({
 		request,
