@@ -28,20 +28,6 @@ $$ LANGUAGE plpgsql
 SET
     search_path = public;
 
--- Function to authenticate user
-CREATE OR REPLACE FUNCTION public.authenticate_user (p_username VARCHAR, p_password VARCHAR) RETURNS TABLE (user_id BIGINT, username VARCHAR) SECURITY DEFINER AS $$
-BEGIN
-    RETURN QUERY
-    SELECT u.id, u.username
-    FROM users u
-    WHERE u.username = p_username AND u.password_hash = p_password;
-
-    UPDATE users SET last_login = NOW() WHERE users.username = p_username;
-END;
-$$ LANGUAGE plpgsql
-SET
-    search_path = public;
-
 -- Function to calculate and update transaction total
 CREATE OR REPLACE FUNCTION public.update_transaction_total (p_transaction_id BIGINT) RETURNS DECIMAL(12, 2) AS $$
 DECLARE

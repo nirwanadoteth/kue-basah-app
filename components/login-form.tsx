@@ -1,163 +1,108 @@
 'use client';
 
-import type React from 'react';
-
-import { useState } from 'react';
-import { useAuth } from '@/lib/auth-context';
+import { cn } from '@/lib/utils';
+import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, User, Lock, Cake, Sparkles } from 'lucide-react';
-import { toast } from 'sonner';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
-/**
- * Renders a user login form with username and password fields, handling input validation, submission, and feedback.
- *
- * Displays validation and authentication errors as toast notifications and disables inputs during submission. On successful login, shows a success toast.
- */
-export default function LoginForm() {
-	const [formData, setFormData] = useState({
-		username: '',
-		password: '',
-	});
-	const [isSubmitting, setIsSubmitting] = useState(false);
+export function LoginForm({
+	className,
+	...props
+}: React.ComponentPropsWithoutRef<'div'>) {
+	const [email, setEmail] = useState('');
+	const [password, setPassword] = useState('');
+	const [error, setError] = useState<string | null>(null);
+	const [isLoading, setIsLoading] = useState(false);
+	const router = useRouter();
 
-	const { login } = useAuth();
-
-	const validateLoginInputs = (username: string, password: string) => {
-		const errors: string[] = [];
-
-		if (!username.trim()) {
-			errors.push('Username wajib diisi');
-		}
-
-		if (!password) {
-			errors.push('Password wajib diisi');
-		}
-
-		return errors;
-	};
-
-	const handleSubmit = async (e: React.FormEvent) => {
+	const handleLogin = async (e: React.FormEvent) => {
 		e.preventDefault();
-
-		const validationErrors = validateLoginInputs(
-			formData.username,
-			formData.password
-		);
-
-		if (validationErrors.length > 0) {
-			validationErrors.forEach((error) => toast.error(error));
-			return;
-		}
-
-		setIsSubmitting(true);
+		const supabase = createClient();
+		setIsLoading(true);
+		setError(null);
 
 		try {
-			await login(formData.username, formData.password);
-			toast.success('Login berhasil! Selamat datang kembali');
-		} catch (error) {
-			const errorMessage =
-				error instanceof Error ? error.message : 'Login gagal';
-			toast.error(errorMessage);
+			const { error } = await supabase.auth.signInWithPassword({
+				email,
+				password,
+			});
+			if (error) throw error;
+			// Update this route to redirect to an authenticated route. The user already has an active session.
+			router.push('/dashboard');
+		} catch (error: unknown) {
+			setError(
+				error instanceof Error ? error.message : 'An error occurred'
+			);
 		} finally {
-			setIsSubmitting(false);
+			setIsLoading(false);
 		}
-	};
-
-	const handleInputChange = (field: string, value: string) => {
-		setFormData((prev) => ({ ...prev, [field]: value }));
 	};
 
 	return (
-		<div className='min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50'>
-			<Card className='w-full max-w-md cotton-candy-card border-0 shadow-2xl'>
-				<CardHeader className='text-center pb-8'>
-					<div className='flex items-center justify-center mb-4'>
-						<div className='relative'>
-							<Cake className='h-12 w-12 text-pink-500' />
-							<Sparkles className='h-6 w-6 text-purple-400 absolute -top-1 -right-1 animate-pulse-soft' />
-						</div>
-					</div>
-					<CardTitle className='text-3xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent'>
-						NAY&apos;S CAKE
-					</CardTitle>
-					<p className='text-gray-600 mt-2'>
-						Masuk ke Sistem Inventaris
-					</p>
+		<div className={cn('flex flex-col gap-6', className)} {...props}>
+			<Card>
+				<CardHeader>
+					<CardTitle className='text-2xl'>Login</CardTitle>
+					<CardDescription>
+						Enter your email below to login to your account
+					</CardDescription>
 				</CardHeader>
-
 				<CardContent>
-					<form onSubmit={handleSubmit} className='space-y-6'>
-						<div className='space-y-2'>
-							<Label
-								htmlFor='username'
-								className='text-gray-700 font-medium'
-							>
-								Username
-							</Label>
-							<div className='relative'>
-								<User className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4' />
+					<form onSubmit={handleLogin}>
+						<div className='flex flex-col gap-6'>
+							<div className='grid gap-2'>
+								<Label htmlFor='email'>Email</Label>
 								<Input
-									id='username'
-									type='text'
-									value={formData.username}
-									onChange={(e) =>
-										handleInputChange(
-											'username',
-											e.target.value
-										)
-									}
-									placeholder='Masukkan username'
-									className='pl-10 border-pink-200 focus:border-pink-400 rounded-xl h-12'
-									disabled={isSubmitting}
+									id='email'
+									type='email'
+									placeholder='m@example.com'
 									required
+									value={email}
+									onChange={(e) => setEmail(e.target.value)}
 								/>
 							</div>
-						</div>
-
-						<div className='space-y-2'>
-							<Label
-								htmlFor='password'
-								className='text-gray-700 font-medium'
-							>
-								Password
-							</Label>
-							<div className='relative'>
-								<Lock className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4' />
+							<div className='grid gap-2'>
+								<div className='flex items-center'>
+									<Label htmlFor='password'>Password</Label>
+									<Link
+										href='/auth/forgot-password'
+										className='ml-auto inline-block text-sm underline-offset-4 hover:underline'
+									>
+										Forgot your password?
+									</Link>
+								</div>
 								<Input
 									id='password'
 									type='password'
-									value={formData.password}
-									onChange={(e) =>
-										handleInputChange(
-											'password',
-											e.target.value
-										)
-									}
-									placeholder='Masukkan password'
-									className='pl-10 border-pink-200 focus:border-pink-400 rounded-xl h-12'
-									disabled={isSubmitting}
 									required
+									value={password}
+									onChange={(e) =>
+										setPassword(e.target.value)
+									}
 								/>
 							</div>
-						</div>
-
-						<Button
-							type='submit'
-							disabled={isSubmitting}
-							className='w-full cotton-candy-button from-pink-400 to-purple-400 rounded-xl h-12 text-lg font-medium'
-						>
-							{isSubmitting ? (
-								<>
-									<Loader2 className='mr-2 h-5 w-5 animate-spin' />
-									Masuk...
-								</>
-							) : (
-								'Masuk'
+							{error && (
+								<p className='text-sm text-red-500'>{error}</p>
 							)}
-						</Button>
+							<Button
+								type='submit'
+								className='w-full'
+								disabled={isLoading}
+							>
+								{isLoading ? 'Logging in...' : 'Login'}
+							</Button>
+						</div>
 					</form>
 				</CardContent>
 			</Card>

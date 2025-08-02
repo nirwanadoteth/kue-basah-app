@@ -12,16 +12,6 @@ export interface Product {
 	updated_at: string;
 }
 
-// Users table
-export interface User {
-	id: number;
-	username: string;
-	password_hash: string;
-	created_at: string;
-	updated_at: string;
-	last_login: string | null;
-}
-
 // Transactions table (previously customer_transactions)
 export interface Transaction {
 	id: number;
