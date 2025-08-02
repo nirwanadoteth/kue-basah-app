@@ -44,8 +44,8 @@ export function MobileNav({ isOpen, onClose, navItems }: MobileNavProps) {
 					</div>
 				)}
 				<Button
-					onClick={() => {
-						logout();
+					onClick={async () => {
+						await logout();
 						onClose();
 					}}
 					variant='ghost'
