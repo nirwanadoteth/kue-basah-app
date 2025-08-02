@@ -31,7 +31,7 @@ export class TransactionsAPI {
 			.select(
 				`
           *,
-          users(username),
+          users(email),
           transaction_details(*)
         `
 			)
@@ -46,7 +46,7 @@ export class TransactionsAPI {
 		return (transactions || []).map((transaction) => ({
 			...transaction,
 			details: transaction.transaction_details || [],
-			user_name: transaction.users?.username || 'Unknown',
+			user_email: transaction.users?.email || 'Unknown',
 		}));
 	}
 
@@ -56,7 +56,7 @@ export class TransactionsAPI {
 			.select(
 				`
           *,
-          users(username),
+          users(email),
           transaction_details(*)
         `
 			)
@@ -76,7 +76,7 @@ export class TransactionsAPI {
 		return {
 			...transaction,
 			details: transaction.transaction_details || [],
-			user_name: transaction.users?.username || 'Unknown',
+			user_email: transaction.users?.email || 'Unknown',
 		};
 	}
 
@@ -261,7 +261,7 @@ export class TransactionsAPI {
 			.select(
 				`
           *,
-          users(username),
+          users(email),
           transaction_details(*)
         `
 			)
@@ -278,7 +278,7 @@ export class TransactionsAPI {
 		return (transactions || []).map((transaction) => ({
 			...transaction,
 			details: transaction.transaction_details || [],
-			user_name: transaction.users?.username || 'Unknown',
+			user_email: transaction.users?.email || 'Unknown',
 		}));
 	}
 }

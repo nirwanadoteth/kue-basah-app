@@ -19,7 +19,7 @@ export interface Transaction {
 	total_price: number;
 	created_at: string;
 	updated_at: string;
-	users?: { username?: string }; // For joins
+	users?: { email?: string }; // For joins
 }
 
 // Transaction Details table
@@ -52,14 +52,6 @@ export type ProductInsert = Omit<
 >;
 export type ProductUpdate = Partial<ProductInsert>;
 
-export type UserInsert = Omit<
-	User,
-	'id' | 'created_at' | 'updated_at' | 'last_login'
->;
-export type UserUpdate = Partial<
-	Omit<User, 'id' | 'created_at' | 'updated_at'>
->;
-
 export type TransactionInsert = Omit<
 	Transaction,
 	'id' | 'total_price' | 'created_at' | 'updated_at' | 'users'
@@ -82,7 +74,7 @@ export type DailyReportUpdate = Partial<Omit<DailyReport, 'id' | 'created_at'>>;
 // Authentication response type (from authenticate_user function)
 export interface AuthUser {
 	user_id: number;
-	username: string;
+	email: string;
 }
 
 // Transaction with details (for display)

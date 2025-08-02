@@ -2,7 +2,7 @@ import { supabase } from '@/lib/supabase';
 
 export interface User {
 	user_id: number;
-	username: string;
+	email: string;
 }
 
 export interface AuthState {
@@ -12,16 +12,16 @@ export interface AuthState {
 }
 
 export class AuthService {
-	// Login with username and password
-	static async login(username: string, password: string): Promise<User> {
+	// Login with email and password
+	static async login(email: string, password: string): Promise<User> {
 		try {
-			if (!username || !password) {
-				throw new Error('Username dan password wajib diisi');
+			if (!email || !password) {
+				throw new Error('Email dan password wajib diisi');
 			}
 
 			// Call the authentication function with plain password
 			const { data, error } = await supabase.auth.signInWithPassword({
-				email: username.trim().toLowerCase(),
+				email: email.trim().toLowerCase(),
 				password,
 			});
 
@@ -31,20 +31,25 @@ export class AuthService {
 			}
 
 			if (!data.user) {
-				throw new Error('Username atau password salah');
+				throw new Error('Email atau password salah');
 			}
 
 			// Fetch user profile from the public 'users' table
 			const { data: profile, error: profileError } = await supabase
 				.from('users')
-				.select('user_id:id, username')
+				.select('user_id:id, email')
 				.eq('id', data.user.id)
 				.single();
 
 			if (profileError || !profile) {
 				await supabase.auth.signOut(); // Sign out to prevent inconsistent state
-				console.error('Error fetching profile for authenticated user:', profileError);
-				throw new Error('Gagal mengambil profil pengguna setelah login.');
+				console.error(
+					'Error fetching profile for authenticated user:',
+					profileError
+				);
+				throw new Error(
+					'Gagal mengambil profil pengguna setelah login.'
+				);
 			}
 
 			return profile;
@@ -62,7 +67,10 @@ export class AuthService {
 	// Get current user from Supabase session
 	static async getCurrentUser(): Promise<User | null> {
 		try {
-			const { data: { user }, error: userError } = await supabase.auth.getUser();
+			const {
+				data: { user },
+				error: userError,
+			} = await supabase.auth.getUser();
 
 			if (userError || !user) {
 				if (userError) console.error('Error fetching user:', userError);
@@ -71,12 +79,16 @@ export class AuthService {
 
 			const { data: profile, error: profileError } = await supabase
 				.from('users')
-				.select('user_id:id, username')
+				.select('user_id:id, email')
 				.eq('id', user.id)
 				.single();
 
 			if (profileError || !profile) {
-				if (profileError) console.warn('User session found but no profile in DB:', profileError.message);
+				if (profileError)
+					console.warn(
+						'User session found but no profile in DB:',
+						profileError.message
+					);
 				return null;
 			}
 
@@ -98,7 +110,7 @@ export class AuthService {
 		try {
 			const { data, error } = await supabase
 				.from('users')
-				.select('user_id:id, username')
+				.select('user_id:id, email')
 				.order('created_at', { ascending: false });
 
 			if (error) {

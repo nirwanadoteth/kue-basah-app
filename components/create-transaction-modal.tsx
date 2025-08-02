@@ -18,7 +18,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select';
-import { useAuth } from '@/lib/auth-context';
+import { AuthService, type User } from '@/lib/auth';
 import { TransactionsAPI } from '@/lib/api/transactions';
 import { useProductStore } from '@/lib/stores/product-store';
 import { useTransactionActions } from '@/hooks/use-transaction-actions';
@@ -65,9 +65,17 @@ export function CreateTransactionModal({
 		initialTransactionId ? 'details' : 'create'
 	);
 
-	const { user } = useAuth();
+	const [user, setUser] = useState<User | null>(null);
 	const userId = user?.user_id;
 	const { products, fetchProducts } = useProductStore();
+
+	useEffect(() => {
+		const fetchUser = async () => {
+			const currentUser = await AuthService.getCurrentUser();
+			setUser(currentUser);
+		};
+		fetchUser();
+	}, []);
 
 	const loadTransaction = useCallback(async () => {
 		if (!currentTransactionId) return;
@@ -187,7 +195,7 @@ export function CreateTransactionModal({
 		<form onSubmit={handleCreateAndOpenDetails} className='space-y-4'>
 			<div className='bg-blue-50 p-3 rounded-lg'>
 				<div className='text-sm text-blue-800'>
-					<p className='font-medium'>Admin: {user?.username}</p>
+					<p className='font-medium'>Admin: {user?.email}</p>
 					<p className='text-xs text-blue-600 mt-1'>
 						{isOrder
 							? 'Pesanan akan dicatat atas nama Anda sebagai admin.'
@@ -231,7 +239,7 @@ export function CreateTransactionModal({
 					<div>
 						<p className='text-sm text-gray-600'>Admin</p>
 						<p className='font-semibold'>
-							{transaction.users?.username}
+							{transaction.users?.email}
 						</p>
 					</div>
 					<div>

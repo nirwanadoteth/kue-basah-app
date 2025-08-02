@@ -28,7 +28,7 @@ import { DatabaseSetupBanner } from '@/components/database-setup-banner';
 /**
  * Displays the transactions management page, allowing users to view, filter, and manage transaction records with statistics, search, date filters, and modals for creating and viewing transaction details.
  *
- * Provides real-time statistics, error handling, and user notifications. Supports refreshing data, searching by transaction ID or admin username, and filtering by date range. Integrates modals for creating new transactions and viewing transaction details.
+ * Provides real-time statistics, error handling, and user notifications. Supports refreshing data, searching by transaction ID or admin email, and filtering by date range. Integrates modals for creating new transactions and viewing transaction details.
  *
  * @returns The rendered transactions management page component.
  */
@@ -109,7 +109,7 @@ export default function TransactionsPage() {
 			filtered = transactions.filter(
 				(transaction) =>
 					transaction.id.toString().includes(searchLower) ||
-					transaction.users?.username
+					transaction.users?.email
 						?.toLowerCase()
 						.includes(searchLower)
 			);
@@ -422,7 +422,7 @@ export default function TransactionsPage() {
 													<span className='font-semibold text-gray-900'>
 														{
 															transaction.users
-																?.username
+																?.email
 														}
 													</span>
 												</div>

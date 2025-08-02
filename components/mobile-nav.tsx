@@ -2,28 +2,20 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useAuth } from '@/lib/auth-context';
 import { Button } from '@/components/ui/button';
 import { LogOut, User } from 'lucide-react';
+import type { User as AuthUser } from '@/lib/auth';
 
 interface MobileNavProps {
 	isOpen: boolean;
 	onClose: () => void;
 	navItems: { href: string; label: string }[];
+	user: AuthUser | null;
+	logout: () => void;
 }
 
-/**
- * Renders a mobile navigation menu with navigation links and user actions.
- *
- * Displays a list of navigation items and, if a user is logged in, shows the username and a logout button. The menu is visible only when `isOpen` is true. Selecting a navigation link or logging out will close the menu.
- *
- * @param isOpen - Whether the mobile navigation menu is visible
- * @param onClose - Callback invoked to close the menu
- * @param navItems - Array of navigation items to display in the menu
- */
-export function MobileNav({ isOpen, onClose, navItems }: MobileNavProps) {
+export function MobileNav({ isOpen, onClose, navItems, user, logout }: MobileNavProps) {
 	const pathname = usePathname();
-	const { user, logout } = useAuth();
 
 	if (!isOpen) return null;
 
@@ -49,7 +41,7 @@ export function MobileNav({ isOpen, onClose, navItems }: MobileNavProps) {
 				{user && (
 					<div className='flex items-center gap-3 px-4 text-base font-medium text-gray-700'>
 						<User className='h-5 w-5' />
-						<span>{user.username}</span>
+						<span>{user.email}</span>
 					</div>
 				)}
 				<Button
