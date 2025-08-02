@@ -23,6 +23,7 @@ import {
 import type { TransactionWithDetails } from '@/lib/supabase';
 import { formatDate, formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
+import { DatabaseSetupBanner } from '@/components/database-setup-banner';
 
 export default function TransactionsPage() {
 	const [isInitialLoading, setIsInitialLoading] = useState(true);
@@ -228,6 +229,9 @@ export default function TransactionsPage() {
 					</Button>
 				</div>
 			)}
+
+			{/* Database Setup Banner */}
+			<DatabaseSetupBanner />
 
 			{/* Header */}
 			<div className='flex flex-col md:flex-row items-center justify-between gap-4'>
@@ -448,8 +452,12 @@ export default function TransactionsPage() {
 															<Eye className='h-3 w-3' />
 														</Button>
 													}
-													transactionId={transaction.id}
-													onClose={handleViewModalClose}
+													transactionId={
+														transaction.id
+													}
+													onClose={
+														handleViewModalClose
+													}
 												/>
 											</td>
 										</tr>

@@ -1,517 +1,598 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { useProductStore } from "@/lib/stores/product-store";
-import { useTransactionStore } from "@/lib/stores/transaction-store";
-import { useReportStore } from "@/lib/stores/report-store";
-import { ReportsAPI } from "@/lib/api/reports";
+import { useEffect, useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { useProductStore } from '@/lib/stores/product-store';
+import { useTransactionStore } from '@/lib/stores/transaction-store';
+import { useReportStore } from '@/lib/stores/report-store';
+import { ReportsAPI } from '@/lib/api/reports';
 import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
+	ChartContainer,
+	ChartTooltip,
+	ChartTooltipContent,
+} from '@/components/ui/chart';
 import {
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-} from "recharts";
+	BarChart,
+	Bar,
+	PieChart,
+	Pie,
+	Cell,
+	CartesianGrid,
+	XAxis,
+	YAxis,
+} from 'recharts';
 import {
-  TrendingUp,
-  BarChart3,
-  PieChartIcon,
-  Sparkles,
-  Calendar,
-  RefreshCw,
-  Download,
-} from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
-import { useMediaQuery } from "@/hooks/use-media-query";
+	TrendingUp,
+	BarChart3,
+	PieChartIcon,
+	Sparkles,
+	Calendar,
+	RefreshCw,
+	Download,
+} from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
+import { useMediaQuery } from '@/hooks/use-media-query';
+import { DatabaseSetupBanner } from '@/components/database-setup-banner';
 
-const COLORS = ["#FF6B9D", "#C44569", "#F8B500", "#6C5CE7", "#00CEC9"];
+const COLORS = ['#FF6B9D', '#C44569', '#F8B500', '#6C5CE7', '#00CEC9'];
 
 const chartConfig = {
-  stock: {
-    label: "Stok",
-    color: "#FF6B9D",
-  },
-  value: {
-    label: "Nilai",
-    color: "#C44569",
-  },
+	stock: {
+		label: 'Stok',
+		color: '#FF6B9D',
+	},
+	value: {
+		label: 'Nilai',
+		color: '#C44569',
+	},
 };
 
 export default function Reports() {
-  useMediaQuery("(max-width: 768px)");
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
-  const [analyticsData, setAnalyticsData] = useState<{
-    stockTrend: Array<{ date: string; stock: number; value: number }>;
-    productDistribution: Array<{ name: string; stock: number; value: number }>;
-  }>({
-    stockTrend: [],
-    productDistribution: [],
-  });
+	useMediaQuery('(max-width: 768px)');
+	const [isInitialLoading, setIsInitialLoading] = useState(true);
+	const [analyticsData, setAnalyticsData] = useState<{
+		stockTrend: Array<{ date: string; stock: number; value: number }>;
+		productDistribution: Array<{
+			name: string;
+			stock: number;
+			value: number;
+		}>;
+	}>({
+		stockTrend: [],
+		productDistribution: [],
+	});
 
-  const {
-    products,
-    fetchProducts,
-    getTotalStock,
-    getTotalValue,
-    isLoading: productsLoading,
-    error: productsError,
-    clearError: clearProductsError,
-  } = useProductStore();
-  const {
-    transactions,
-    fetchTransactions,
-    isLoading: transactionsLoading,
-    error: transactionsError,
-    clearError: clearTransactionsError,
-  } = useTransactionStore();
-  const {
-    fetchReports,
-    isLoading: reportsLoading,
-    error: reportsError,
-    clearError: clearReportsError,
-  } = useReportStore();
+	const {
+		products,
+		fetchProducts,
+		getTotalStock,
+		getTotalValue,
+		isLoading: productsLoading,
+		error: productsError,
+		clearError: clearProductsError,
+	} = useProductStore();
+	const {
+		transactions,
+		fetchTransactions,
+		isLoading: transactionsLoading,
+		error: transactionsError,
+		clearError: clearTransactionsError,
+	} = useTransactionStore();
+	const {
+		fetchReports,
+		isLoading: reportsLoading,
+		error: reportsError,
+		clearError: clearReportsError,
+	} = useReportStore();
 
-  const isLoading = productsLoading || transactionsLoading || reportsLoading;
-  const error = productsError || transactionsError || reportsError;
+	const isLoading = productsLoading || transactionsLoading || reportsLoading;
+	const error = productsError || transactionsError || reportsError;
 
-  useEffect(() => {
-    const initializeData = async () => {
-      try {
-        await Promise.all([
-          fetchProducts(),
-          fetchTransactions(),
-          fetchReports(),
-        ]);
+	useEffect(() => {
+		const initializeData = async () => {
+			try {
+				await Promise.all([
+					fetchProducts(),
+					fetchTransactions(),
+					fetchReports(),
+				]);
 
-        // Fetch analytics data
-        const analytics = await ReportsAPI.getAnalytics();
-        setAnalyticsData(analytics);
-      } catch (error) {
-        console.error("Failed to initialize data:", error);
-      } finally {
-        setIsInitialLoading(false);
-      }
-    };
+				// Fetch analytics data
+				const analytics = await ReportsAPI.getAnalytics();
+				setAnalyticsData(analytics);
+			} catch (error) {
+				console.error('Failed to initialize data:', error);
+			} finally {
+				setIsInitialLoading(false);
+			}
+		};
 
-    initializeData();
-  }, [fetchProducts, fetchTransactions, fetchReports]);
+		initializeData();
+	}, [fetchProducts, fetchTransactions, fetchReports]);
 
-  const handleRefresh = async () => {
-    clearProductsError();
-    clearTransactionsError();
-    clearReportsError();
-    try {
-      await Promise.all([fetchProducts(), fetchTransactions(), fetchReports()]);
+	const handleRefresh = async () => {
+		clearProductsError();
+		clearTransactionsError();
+		clearReportsError();
+		try {
+			await Promise.all([
+				fetchProducts(),
+				fetchTransactions(),
+				fetchReports(),
+			]);
 
-      const analytics = await ReportsAPI.getAnalytics();
-      setAnalyticsData(analytics);
-    } catch (error) {
-      console.error("Failed to refresh data:", error);
-    }
-  };
+			const analytics = await ReportsAPI.getAnalytics();
+			setAnalyticsData(analytics);
+		} catch (error) {
+			console.error('Failed to refresh data:', error);
+		}
+	};
 
-  const handleExportReport = () => {
-    // Create CSV data
-    const csvData = [
-      ["Produk", "Stok Saat Ini", "Stok Minimum", "Harga", "Total Nilai"],
-      ...products.map((product) => [
-        product.name,
-        product.current_stock.toString(),
-        product.min_stock.toString(),
-        product.price.toString(),
-        product.total_value.toString(),
-      ]),
-    ];
+	const handleExportReport = () => {
+		// Create CSV data
+		const csvData = [
+			['Produk', 'Stok Saat Ini', 'Stok Minimum', 'Harga', 'Total Nilai'],
+			...products.map((product) => [
+				product.name,
+				product.current_stock.toString(),
+				product.min_stock.toString(),
+				product.price.toString(),
+				product.total_value.toString(),
+			]),
+		];
 
-    // Convert to CSV string
-    const csvString = csvData.map((row) => row.join(",")).join("\n");
+		// Convert to CSV string
+		const csvString = csvData.map((row) => row.join(',')).join('\n');
 
-    // Create and download file
-    const blob = new Blob([csvString], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `laporan-inventaris-${
-      new Date().toISOString().split("T")[0]
-    }.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-  };
+		// Create and download file
+		const blob = new Blob([csvString], { type: 'text/csv' });
+		const url = window.URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = `laporan-inventaris-${
+			new Date().toISOString().split('T')[0]
+		}.csv`;
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
+		window.URL.revokeObjectURL(url);
+	};
 
-  if (isInitialLoading) {
-    return (
-      <div className="p-6 space-y-6">
-        <div className="space-y-2">
-          <div className="h-8 w-64 bg-gradient-to-r from-pink-100 to-purple-100 rounded animate-pulse" />
-          <div className="h-4 w-96 bg-gradient-to-r from-pink-100 to-purple-100 rounded animate-pulse" />
-        </div>
-        <div className="h-10 w-64 bg-gradient-to-r from-pink-100 to-purple-100 rounded animate-pulse" />
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="h-80 bg-gradient-to-r from-pink-100 to-purple-100 rounded-2xl animate-pulse" />
-          <div className="h-80 bg-gradient-to-r from-pink-100 to-purple-100 rounded-2xl animate-pulse" />
-        </div>
-      </div>
-    );
-  }
+	if (isInitialLoading) {
+		return (
+			<div className='p-6 space-y-6'>
+				<div className='space-y-2'>
+					<div className='h-8 w-64 bg-gradient-to-r from-pink-100 to-purple-100 rounded animate-pulse' />
+					<div className='h-4 w-96 bg-gradient-to-r from-pink-100 to-purple-100 rounded animate-pulse' />
+				</div>
+				<div className='h-10 w-64 bg-gradient-to-r from-pink-100 to-purple-100 rounded animate-pulse' />
+				<div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
+					<div className='h-80 bg-gradient-to-r from-pink-100 to-purple-100 rounded-2xl animate-pulse' />
+					<div className='h-80 bg-gradient-to-r from-pink-100 to-purple-100 rounded-2xl animate-pulse' />
+				</div>
+			</div>
+		);
+	}
 
-  return (
-    <div className="p-6 space-y-8 animate-fade-in">
-      {/* Error Banner */}
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-2xl p-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 text-red-500" />
-            <span className="text-red-700">{error}</span>
-          </div>
-          <Button
-            onClick={handleRefresh}
-            size="sm"
-            variant="outline"
-            className="border-red-200 text-red-600 hover:bg-red-50 bg-transparent"
-          >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Coba Lagi
-          </Button>
-        </div>
-      )}
+	return (
+		<div className='p-6 space-y-8 animate-fade-in'>
+			{/* Error Banner */}
+			{error && (
+				<div className='bg-red-50 border border-red-200 rounded-2xl p-4 flex items-center justify-between'>
+					<div className='flex items-center gap-2'>
+						<BarChart3 className='h-5 w-5 text-red-500' />
+						<span className='text-red-700'>{error}</span>
+					</div>
+					<Button
+						onClick={handleRefresh}
+						size='sm'
+						variant='outline'
+						className='border-red-200 text-red-600 hover:bg-red-50 bg-transparent'
+					>
+						<RefreshCw className='h-4 w-4 mr-2' />
+						Coba Lagi
+					</Button>
+				</div>
+			)}
 
-      {/* Header */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent flex items-center gap-2">
-            <BarChart3 className="h-8 w-8 text-pink-500" />
-            Laporan Inventaris
-          </h1>
-          <p className="text-gray-600 mt-1 flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-purple-400" />
-            Analisis mendalam dan visualisasi data penjualan
-          </p>
-        </div>
+			{/* Database Setup Banner */}
+			<DatabaseSetupBanner />
 
-        <div className="flex gap-3">
-          <Button
-            onClick={handleExportReport}
-            variant="outline"
-            className="border-green-200 text-green-600 hover:bg-green-50 rounded-full px-4 bg-transparent"
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Export CSV
-          </Button>
+			{/* Header */}
+			<div className='flex flex-col md:flex-row items-center justify-between gap-4'>
+				<div>
+					<h1 className='text-3xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent flex items-center gap-2'>
+						<BarChart3 className='h-8 w-8 text-pink-500' />
+						Laporan Inventaris
+					</h1>
+					<p className='text-gray-600 mt-1 flex items-center gap-2'>
+						<Sparkles className='h-4 w-4 text-purple-400' />
+						Analisis mendalam dan visualisasi data penjualan
+					</p>
+				</div>
 
-          <Button
-            onClick={handleRefresh}
-            variant="outline"
-            className="border-pink-200 text-pink-600 hover:bg-pink-50 rounded-full px-4 bg-transparent"
-            disabled={isLoading}
-          >
-            <RefreshCw
-              className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
-            />
-            Refresh
-          </Button>
-        </div>
-      </div>
+				<div className='flex gap-3'>
+					<Button
+						onClick={handleExportReport}
+						variant='outline'
+						className='border-green-200 text-green-600 hover:bg-green-50 rounded-full px-4 bg-transparent'
+					>
+						<Download className='h-4 w-4 mr-2' />
+						Export CSV
+					</Button>
 
-      <Tabs defaultValue="harian" className="space-y-6">
-        <TabsList className="bg-white/80 backdrop-blur-sm border border-pink-200/50 rounded-full p-1">
-          <TabsTrigger
-            value="harian"
-            className="rounded-full data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-400 data-[state=active]:to-purple-400 data-[state=active]:text-white"
-          >
-            <Calendar className="h-4 w-4 mr-2" />
-            Harian
-          </TabsTrigger>
-          <TabsTrigger
-            value="mingguan"
-            className="rounded-full data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-400 data-[state=active]:to-purple-400 data-[state=active]:text-white"
-          >
-            Mingguan
-          </TabsTrigger>
-          <TabsTrigger
-            value="bulanan"
-            className="rounded-full data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-400 data-[state=active]:to-purple-400 data-[state=active]:text-white"
-          >
-            Bulanan
-          </TabsTrigger>
-        </TabsList>
+					<Button
+						onClick={handleRefresh}
+						variant='outline'
+						className='border-pink-200 text-pink-600 hover:bg-pink-50 rounded-full px-4 bg-transparent'
+						disabled={isLoading}
+					>
+						<RefreshCw
+							className={`h-4 w-4 mr-2 ${
+								isLoading ? 'animate-spin' : ''
+							}`}
+						/>
+						Refresh
+					</Button>
+				</div>
+			</div>
 
-        <TabsContent value="harian" className="space-y-6">
-          {/* Summary Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            <Card className="cotton-candy-card rounded-2xl border-0 hover:shadow-xl transition-all duration-300">
-              <CardContent className="p-4 text-center">
-                <TrendingUp className="h-8 w-8 text-green-500 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-green-500">
-                  {getTotalStock()}
-                </div>
-                <div className="text-sm text-gray-600">Total Stok</div>
-              </CardContent>
-            </Card>
+			<Tabs defaultValue='harian' className='space-y-6'>
+				<TabsList className='bg-white/80 backdrop-blur-sm border border-pink-200/50 rounded-full p-1'>
+					<TabsTrigger
+						value='harian'
+						className='rounded-full data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-400 data-[state=active]:to-purple-400 data-[state=active]:text-white'
+					>
+						<Calendar className='h-4 w-4 mr-2' />
+						Harian
+					</TabsTrigger>
+					<TabsTrigger
+						value='mingguan'
+						className='rounded-full data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-400 data-[state=active]:to-purple-400 data-[state=active]:text-white'
+					>
+						Mingguan
+					</TabsTrigger>
+					<TabsTrigger
+						value='bulanan'
+						className='rounded-full data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-400 data-[state=active]:to-purple-400 data-[state=active]:text-white'
+					>
+						Bulanan
+					</TabsTrigger>
+				</TabsList>
 
-            <Card className="cotton-candy-card rounded-2xl border-0 hover:shadow-xl transition-all duration-300">
-              <CardContent className="p-4 text-center">
-                <PieChartIcon className="h-8 w-8 text-purple-500 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-purple-500">
-                  {products.length}
-                </div>
-                <div className="text-sm text-gray-600">Jenis Produk</div>
-              </CardContent>
-            </Card>
+				<TabsContent value='harian' className='space-y-6'>
+					{/* Summary Cards */}
+					<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4'>
+						<Card className='cotton-candy-card rounded-2xl border-0 hover:shadow-xl transition-all duration-300'>
+							<CardContent className='p-4 text-center'>
+								<TrendingUp className='h-8 w-8 text-green-500 mx-auto mb-2' />
+								<div className='text-2xl font-bold text-green-500'>
+									{getTotalStock()}
+								</div>
+								<div className='text-sm text-gray-600'>
+									Total Stok
+								</div>
+							</CardContent>
+						</Card>
 
-            <Card className="cotton-candy-card rounded-2xl border-0 hover:shadow-xl transition-all duration-300">
-              <CardContent className="p-4 text-center">
-                <BarChart3 className="h-8 w-8 text-pink-500 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-pink-500">
-                  {transactions.length}
-                </div>
-                <div className="text-sm text-gray-600">Transaksi</div>
-              </CardContent>
-            </Card>
+						<Card className='cotton-candy-card rounded-2xl border-0 hover:shadow-xl transition-all duration-300'>
+							<CardContent className='p-4 text-center'>
+								<PieChartIcon className='h-8 w-8 text-purple-500 mx-auto mb-2' />
+								<div className='text-2xl font-bold text-purple-500'>
+									{products.length}
+								</div>
+								<div className='text-sm text-gray-600'>
+									Jenis Produk
+								</div>
+							</CardContent>
+						</Card>
 
-            <Card className="cotton-candy-card rounded-2xl border-0 hover:shadow-xl transition-all duration-300">
-              <CardContent className="p-4 text-center">
-                <TrendingUp className="h-8 w-8 text-indigo-500 mx-auto mb-2" />
-                <div className="text-lg font-bold text-indigo-500">
-                  {formatCurrency(getTotalValue())}
-                </div>
-                <div className="text-sm text-gray-600">Total Nilai</div>
-              </CardContent>
-            </Card>
-          </div>
+						<Card className='cotton-candy-card rounded-2xl border-0 hover:shadow-xl transition-all duration-300'>
+							<CardContent className='p-4 text-center'>
+								<BarChart3 className='h-8 w-8 text-pink-500 mx-auto mb-2' />
+								<div className='text-2xl font-bold text-pink-500'>
+									{transactions.length}
+								</div>
+								<div className='text-sm text-gray-600'>
+									Transaksi
+								</div>
+							</CardContent>
+						</Card>
 
-          {/* Charts Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Stock Distribution Bar Chart */}
-            <Card className="cotton-candy-card rounded-2xl border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5 text-pink-500" />
-                  Distribusi Stok Produk
-                </CardTitle>
-                <div className="flex items-center space-x-2">
-                  <span className="text-3xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
-                    {getTotalStock()}
-                  </span>
-                  <span className="text-sm text-green-600 bg-green-100 px-2 py-1 rounded-full">
-                    Live Data
-                  </span>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {analyticsData.productDistribution.length > 0 ? (
-                  <ChartContainer config={chartConfig} className="h-[300px]">
-                    <BarChart data={analyticsData.productDistribution}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis
-                        dataKey="name"
-                        tick={{ fontSize: 12 }}
-                        angle={-45}
-                        textAnchor="end"
-                        height={80}
-                      />
-                      <YAxis tick={{ fontSize: 12 }} />
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                      <Bar
-                        dataKey="stock"
-                        fill="var(--color-stock)"
-                        radius={[4, 4, 0, 0]}
-                      />
-                    </BarChart>
-                  </ChartContainer>
-                ) : (
-                  <div className="h-[300px] flex items-center justify-center text-gray-500">
-                    <div className="text-center">
-                      <BarChart3 className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                      <p>Tidak ada data untuk ditampilkan</p>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+						<Card className='cotton-candy-card rounded-2xl border-0 hover:shadow-xl transition-all duration-300'>
+							<CardContent className='p-4 text-center'>
+								<TrendingUp className='h-8 w-8 text-indigo-500 mx-auto mb-2' />
+								<div className='text-lg font-bold text-indigo-500'>
+									{formatCurrency(getTotalValue())}
+								</div>
+								<div className='text-sm text-gray-600'>
+									Total Nilai
+								</div>
+							</CardContent>
+						</Card>
+					</div>
 
-            {/* Product Value Distribution */}
-            <Card className="cotton-candy-card rounded-2xl border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-purple-500" />
-                  Distribusi Nilai Produk
-                </CardTitle>
-                <div className="flex items-center space-x-2">
-                  <span className="text-3xl font-bold bg-gradient-to-r from-purple-500 to-indigo-500 bg-clip-text text-transparent">
-                    {formatCurrency(getTotalValue())}
-                  </span>
-                  <span className="text-sm text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
-                    Total Nilai
-                  </span>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {analyticsData.productDistribution.length > 0 ? (
-                  <ChartContainer config={chartConfig} className="h-[300px]">
-                    <BarChart data={analyticsData.productDistribution}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis
-                        dataKey="name"
-                        tick={{ fontSize: 12 }}
-                        angle={-45}
-                        textAnchor="end"
-                        height={80}
-                      />
-                      <YAxis tick={{ fontSize: 12 }} />
-                      <ChartTooltip
-                        content={<ChartTooltipContent />}
-                        formatter={(value) => [
-                          formatCurrency(Number(value)),
-                          "Nilai",
-                        ]}
-                      />
-                      <Bar
-                        dataKey="value"
-                        fill="var(--color-value)"
-                        radius={[4, 4, 0, 0]}
-                      />
-                    </BarChart>
-                  </ChartContainer>
-                ) : (
-                  <div className="h-[300px] flex items-center justify-center text-gray-500">
-                    <div className="text-center">
-                      <TrendingUp className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                      <p>Tidak ada data untuk ditampilkan</p>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+					{/* Charts Section */}
+					<div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
+						{/* Stock Distribution Bar Chart */}
+						<Card className='cotton-candy-card rounded-2xl border-0 shadow-lg'>
+							<CardHeader>
+								<CardTitle className='text-lg flex items-center gap-2'>
+									<BarChart3 className='h-5 w-5 text-pink-500' />
+									Distribusi Stok Produk
+								</CardTitle>
+								<div className='flex items-center space-x-2'>
+									<span className='text-3xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent'>
+										{getTotalStock()}
+									</span>
+									<span className='text-sm text-green-600 bg-green-100 px-2 py-1 rounded-full'>
+										Live Data
+									</span>
+								</div>
+							</CardHeader>
+							<CardContent>
+								{analyticsData.productDistribution.length >
+								0 ? (
+									<ChartContainer
+										config={chartConfig}
+										className='h-[300px]'
+									>
+										<BarChart
+											data={
+												analyticsData.productDistribution
+											}
+										>
+											<CartesianGrid strokeDasharray='3 3' />
+											<XAxis
+												dataKey='name'
+												tick={{ fontSize: 12 }}
+												angle={-45}
+												textAnchor='end'
+												height={80}
+											/>
+											<YAxis tick={{ fontSize: 12 }} />
+											<ChartTooltip
+												content={
+													<ChartTooltipContent />
+												}
+											/>
+											<Bar
+												dataKey='stock'
+												fill='var(--color-stock)'
+												radius={[4, 4, 0, 0]}
+											/>
+										</BarChart>
+									</ChartContainer>
+								) : (
+									<div className='h-[300px] flex items-center justify-center text-gray-500'>
+										<div className='text-center'>
+											<BarChart3 className='h-12 w-12 mx-auto mb-2 opacity-50' />
+											<p>
+												Tidak ada data untuk ditampilkan
+											</p>
+										</div>
+									</div>
+								)}
+							</CardContent>
+						</Card>
 
-          {/* Pie Chart */}
-          <Card className="cotton-candy-card rounded-2xl border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <PieChartIcon className="h-5 w-5 text-indigo-500" />
-                Komposisi Stok Produk
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {analyticsData.productDistribution.length > 0 ? (
-                <div className="flex flex-col lg:flex-row items-center gap-8">
-                  <div className="flex-1">
-                    <ChartContainer config={chartConfig} className="h-[400px]">
-                      <PieChart>
-                        <Pie
-                          data={analyticsData.productDistribution}
-                          cx="50%"
-                          cy="50%"
-                          outerRadius={120}
-                          fill="#8884d8"
-                          dataKey="stock"
-                          label={({ name, percent }) =>
-                            `${name} ${((percent || 0) * 100).toFixed(0)}%`
-                          }
-                          labelLine={false}
-                        >
-                          {analyticsData.productDistribution.map(
-                            (entry, index) => (
-                              <Cell
-                                key={`cell-${index}`}
-                                fill={COLORS[index % COLORS.length]}
-                              />
-                            )
-                          )}
-                        </Pie>
-                        <ChartTooltip
-                          content={<ChartTooltipContent />}
-                          formatter={(value, name) => [`${value} pcs`, name]}
-                        />
-                      </PieChart>
-                    </ChartContainer>
-                  </div>
-                  <div className="flex-1 space-y-3">
-                    <h4 className="font-semibold text-gray-700 mb-4">
-                      Detail Produk:
-                    </h4>
-                    {analyticsData.productDistribution.map((item, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50"
-                      >
-                        <div
-                          className="w-4 h-4 rounded-full flex-shrink-0"
-                          style={{
-                            backgroundColor: COLORS[index % COLORS.length],
-                          }}
-                        />
-                        <div className="flex-1">
-                          <span className="text-sm font-medium text-gray-700">
-                            {item.name}
-                          </span>
-                          <div className="text-xs text-gray-500">
-                            {formatCurrency(item.value)}
-                          </div>
-                        </div>
-                        <span className="text-sm text-gray-500 font-medium">
-                          {item.stock} pcs
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="h-[400px] flex items-center justify-center text-gray-500">
-                  <div className="text-center">
-                    <PieChartIcon className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                    <h3 className="text-lg font-semibold mb-2">
-                      Tidak ada data produk
-                    </h3>
-                    <p>Tambahkan produk untuk melihat komposisi stok</p>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+						{/* Product Value Distribution */}
+						<Card className='cotton-candy-card rounded-2xl border-0 shadow-lg'>
+							<CardHeader>
+								<CardTitle className='text-lg flex items-center gap-2'>
+									<TrendingUp className='h-5 w-5 text-purple-500' />
+									Distribusi Nilai Produk
+								</CardTitle>
+								<div className='flex items-center space-x-2'>
+									<span className='text-3xl font-bold bg-gradient-to-r from-purple-500 to-indigo-500 bg-clip-text text-transparent'>
+										{formatCurrency(getTotalValue())}
+									</span>
+									<span className='text-sm text-blue-600 bg-blue-100 px-2 py-1 rounded-full'>
+										Total Nilai
+									</span>
+								</div>
+							</CardHeader>
+							<CardContent>
+								{analyticsData.productDistribution.length >
+								0 ? (
+									<ChartContainer
+										config={chartConfig}
+										className='h-[300px]'
+									>
+										<BarChart
+											data={
+												analyticsData.productDistribution
+											}
+										>
+											<CartesianGrid strokeDasharray='3 3' />
+											<XAxis
+												dataKey='name'
+												tick={{ fontSize: 12 }}
+												angle={-45}
+												textAnchor='end'
+												height={80}
+											/>
+											<YAxis tick={{ fontSize: 12 }} />
+											<ChartTooltip
+												content={
+													<ChartTooltipContent />
+												}
+												formatter={(value) => [
+													formatCurrency(
+														Number(value)
+													),
+													'Nilai',
+												]}
+											/>
+											<Bar
+												dataKey='value'
+												fill='var(--color-value)'
+												radius={[4, 4, 0, 0]}
+											/>
+										</BarChart>
+									</ChartContainer>
+								) : (
+									<div className='h-[300px] flex items-center justify-center text-gray-500'>
+										<div className='text-center'>
+											<TrendingUp className='h-12 w-12 mx-auto mb-2 opacity-50' />
+											<p>
+												Tidak ada data untuk ditampilkan
+											</p>
+										</div>
+									</div>
+								)}
+							</CardContent>
+						</Card>
+					</div>
 
-        <TabsContent value="mingguan">
-          <Card className="cotton-candy-card rounded-2xl border-0 shadow-lg">
-            <CardContent className="p-12 text-center">
-              <Calendar className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-600 mb-2">
-                Laporan Mingguan
-              </h3>
-              <p className="text-gray-500">
-                Data laporan mingguan akan segera tersedia
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
+					{/* Pie Chart */}
+					<Card className='cotton-candy-card rounded-2xl border-0 shadow-lg'>
+						<CardHeader>
+							<CardTitle className='text-lg flex items-center gap-2'>
+								<PieChartIcon className='h-5 w-5 text-indigo-500' />
+								Komposisi Stok Produk
+							</CardTitle>
+						</CardHeader>
+						<CardContent>
+							{analyticsData.productDistribution.length > 0 ? (
+								<div className='flex flex-col lg:flex-row items-center gap-8'>
+									<div className='flex-1'>
+										<ChartContainer
+											config={chartConfig}
+											className='h-[400px]'
+										>
+											<PieChart>
+												<Pie
+													data={
+														analyticsData.productDistribution
+													}
+													cx='50%'
+													cy='50%'
+													outerRadius={120}
+													fill='#8884d8'
+													dataKey='stock'
+													label={({
+														name,
+														percent,
+													}) =>
+														`${name} ${(
+															(percent || 0) * 100
+														).toFixed(0)}%`
+													}
+													labelLine={false}
+												>
+													{analyticsData.productDistribution.map(
+														(entry, index) => (
+															<Cell
+																key={`cell-${index}`}
+																fill={
+																	COLORS[
+																		index %
+																			COLORS.length
+																	]
+																}
+															/>
+														)
+													)}
+												</Pie>
+												<ChartTooltip
+													content={
+														<ChartTooltipContent />
+													}
+													formatter={(
+														value,
+														name
+													) => [`${value} pcs`, name]}
+												/>
+											</PieChart>
+										</ChartContainer>
+									</div>
+									<div className='flex-1 space-y-3'>
+										<h4 className='font-semibold text-gray-700 mb-4'>
+											Detail Produk:
+										</h4>
+										{analyticsData.productDistribution.map(
+											(item, index) => (
+												<div
+													key={index}
+													className='flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50'
+												>
+													<div
+														className='w-4 h-4 rounded-full flex-shrink-0'
+														style={{
+															backgroundColor:
+																COLORS[
+																	index %
+																		COLORS.length
+																],
+														}}
+													/>
+													<div className='flex-1'>
+														<span className='text-sm font-medium text-gray-700'>
+															{item.name}
+														</span>
+														<div className='text-xs text-gray-500'>
+															{formatCurrency(
+																item.value
+															)}
+														</div>
+													</div>
+													<span className='text-sm text-gray-500 font-medium'>
+														{item.stock} pcs
+													</span>
+												</div>
+											)
+										)}
+									</div>
+								</div>
+							) : (
+								<div className='h-[400px] flex items-center justify-center text-gray-500'>
+									<div className='text-center'>
+										<PieChartIcon className='h-16 w-16 mx-auto mb-4 opacity-50' />
+										<h3 className='text-lg font-semibold mb-2'>
+											Tidak ada data produk
+										</h3>
+										<p>
+											Tambahkan produk untuk melihat
+											komposisi stok
+										</p>
+									</div>
+								</div>
+							)}
+						</CardContent>
+					</Card>
+				</TabsContent>
 
-        <TabsContent value="bulanan">
-          <Card className="cotton-candy-card rounded-2xl border-0 shadow-lg">
-            <CardContent className="p-12 text-center">
-              <Calendar className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-600 mb-2">
-                Laporan Bulanan
-              </h3>
-              <p className="text-gray-500">
-                Data laporan bulanan akan segera tersedia
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
-  );
+				<TabsContent value='mingguan'>
+					<Card className='cotton-candy-card rounded-2xl border-0 shadow-lg'>
+						<CardContent className='p-12 text-center'>
+							<Calendar className='h-16 w-16 text-gray-300 mx-auto mb-4' />
+							<h3 className='text-xl font-semibold text-gray-600 mb-2'>
+								Laporan Mingguan
+							</h3>
+							<p className='text-gray-500'>
+								Data laporan mingguan akan segera tersedia
+							</p>
+						</CardContent>
+					</Card>
+				</TabsContent>
+
+				<TabsContent value='bulanan'>
+					<Card className='cotton-candy-card rounded-2xl border-0 shadow-lg'>
+						<CardContent className='p-12 text-center'>
+							<Calendar className='h-16 w-16 text-gray-300 mx-auto mb-4' />
+							<h3 className='text-xl font-semibold text-gray-600 mb-2'>
+								Laporan Bulanan
+							</h3>
+							<p className='text-gray-500'>
+								Data laporan bulanan akan segera tersedia
+							</p>
+						</CardContent>
+					</Card>
+				</TabsContent>
+			</Tabs>
+		</div>
+	);
 }
