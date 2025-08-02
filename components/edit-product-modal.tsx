@@ -71,8 +71,7 @@ export function EditProductModal({ trigger, product }: EditProductModalProps) {
 		e.preventDefault();
 
 		const price = Number.parseFloat(formData.price.trim());
-		const minStock = Number.parseInt(formData.minStock.trim());
-
+		const minStock = Number.parseInt(formData.minStock.trim(), 10);
 		const validationErrors = validateEditInputs(
 			formData.name,
 			price,
