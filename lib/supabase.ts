@@ -66,6 +66,12 @@ export const supabase = createClient(
 	}
 );
 
+/**
+ * Determines whether the given value is an object containing a string `message` property.
+ *
+ * @param error - The value to check
+ * @returns True if `error` is an object with a string `message` property; otherwise, false
+ */
 function isErrorWithMessage(error: unknown): error is { message: string } {
 	return (
 		typeof error === 'object' &&

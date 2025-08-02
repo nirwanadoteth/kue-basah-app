@@ -11,6 +11,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, User, Lock, Cake, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
+/**
+ * Renders a user login form with username and password fields, handling input validation, submission, and feedback.
+ *
+ * Displays validation and authentication errors as toast notifications and disables inputs during submission. On successful login, shows a success toast.
+ */
 export default function LoginForm() {
 	const [formData, setFormData] = useState({
 		username: '',

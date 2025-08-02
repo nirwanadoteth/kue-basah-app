@@ -6,7 +6,10 @@
 		"dev": "next dev --turbopack",
 		"build": "next build",
 		"start": "next start",
+    "test": "jest",
 		"lint": "next lint"
+    ,"validate-readme": "node tests/documentation/validate-readme.js"
+    ,"test:docs": "jest --testPathPattern=documentation"
 	},
 	"dependencies": {
 		"@hookform/resolvers": "^3.9.1",
@@ -81,5 +84,7 @@
 		"supabase": "^2.31.8",
 		"tailwindcss": "^3.4.17",
 		"typescript": "^5"
+    ,"jest": "^29.0.0"
+    ,"@types/jest": "^29.0.0"
 	}
 }

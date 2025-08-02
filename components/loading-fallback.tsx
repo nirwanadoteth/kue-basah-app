@@ -3,6 +3,11 @@
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
+/**
+ * Displays a skeleton-based loading placeholder UI for content that is being fetched.
+ *
+ * Renders a structured layout of skeleton elements to visually indicate loading states for headings, cards, and tabular data.
+ */
 export function LoadingFallback() {
 	return (
 		<div className='p-6 space-y-6'>

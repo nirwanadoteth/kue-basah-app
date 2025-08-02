@@ -7,7 +7,11 @@ import {
 	type TransactionWithDetails,
 } from '@/lib/supabase';
 
-// Helper function to handle Supabase errors
+/**
+ * Handles Supabase errors by logging them and throwing a descriptive error.
+ *
+ * If the error message indicates missing database tables, throws a setup-related error; otherwise, throws a generic error with the provided message.
+ */
 function handleSupabaseError(error: Error, message: string): never {
 	console.error(`Supabase error ${message}:`, error);
 	if (

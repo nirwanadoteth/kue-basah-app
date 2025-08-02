@@ -22,6 +22,14 @@ interface EditProductModalProps {
 	product: Product;
 }
 
+/**
+ * Displays a modal dialog for editing the details of an existing product.
+ *
+ * Renders a form pre-filled with the product's current name, price, and minimum stock. Validates user input and updates the product on submission. Shows the current stock as read-only information. Provides feedback for validation errors and update status.
+ *
+ * @param trigger - The React node that opens the modal when interacted with
+ * @param product - The product object containing current details to edit
+ */
 export function EditProductModal({ trigger, product }: EditProductModalProps) {
 	const [open, setOpen] = useState(false);
 	const [formData, setFormData] = useState({

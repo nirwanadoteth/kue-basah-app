@@ -1,5 +1,10 @@
 import { Skeleton } from '@/components/ui/skeleton';
 
+/**
+ * Renders a skeleton placeholder for a dashboard layout while content is loading.
+ *
+ * Displays header, summary cards, and a detailed list section using skeleton elements to mimic the final dashboard structure.
+ */
 export function DashboardSkeleton() {
 	return (
 		<div className='p-6 space-y-6'>
@@ -34,6 +39,11 @@ export function DashboardSkeleton() {
 	);
 }
 
+/**
+ * Displays a placeholder skeleton for a table with six rows.
+ *
+ * Renders a card containing six rows of skeleton elements, each row simulating the appearance of table data while content is loading.
+ */
 export function TableSkeleton() {
 	return (
 		<div className='cotton-candy-card rounded-2xl p-6'>

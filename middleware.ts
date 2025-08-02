@@ -1,6 +1,11 @@
 import { updateSession } from '@/lib/supabase/middleware';
 import { type NextRequest } from 'next/server';
 
+/**
+ * Updates the user session for incoming requests using Supabase middleware.
+ *
+ * Applies session management logic to all requests except those targeting static assets or image files, as defined by the route matcher configuration.
+ */
 export async function middleware(request: NextRequest) {
 	return await updateSession(request);
 }
