@@ -20,9 +20,9 @@ export class AuthService {
 			}
 
 			// Call the authentication function with plain password
-			const { data, error } = await supabase.rpc('authenticate_user', {
-				p_username: username.trim().toLowerCase(),
-				p_password: password, // Using plain password for now
+			const { data, error } = await supabase.auth.signInWithPassword({
+				email: username.trim().toLowerCase(),
+				password,
 			});
 
 			if (error) {
