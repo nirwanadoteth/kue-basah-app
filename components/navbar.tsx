@@ -1,26 +1,35 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useAuth } from '@/lib/auth-context';
+import { usePathname, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Cake, Sparkles, LogOut, User, Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MobileNav } from './mobile-nav';
+import { AuthService, type User as AuthUser } from '@/lib/auth';
 
-/**
- * Renders the main navigation bar for authenticated users, including navigation links, user info, logout button, and a responsive mobile menu.
- *
- * The navbar is hidden on the login page and when the user is not authenticated.
- */
 export function Navbar() {
 	const pathname = usePathname();
-	const { user, logout, isAuthenticated } = useAuth();
+	const router = useRouter();
+	const [user, setUser] = useState<AuthUser | null>(null);
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-	if (pathname === '/login' || !isAuthenticated) {
+	useEffect(() => {
+		const fetchUser = async () => {
+			const currentUser = await AuthService.getCurrentUser();
+			setUser(currentUser);
+		};
+		fetchUser();
+	}, []);
+
+	if (pathname === '/login') {
 		return null;
 	}
+
+	const handleLogout = async () => {
+		await AuthService.logout();
+		router.push('/login');
+	};
 
 	const navItems = [
 		{ href: '/', label: 'Dashboard' },
@@ -67,11 +76,11 @@ export function Navbar() {
 					{user && (
 						<div className='flex items-center gap-2 text-sm text-gray-600'>
 							<User className='h-4 w-4' />
-							<span className='font-medium'>{user.username}</span>
+							<span className='font-medium'>{user.email}</span>
 						</div>
 					)}
 					<Button
-						onClick={logout}
+						onClick={handleLogout}
 						variant='outline'
 						size='sm'
 						className='border-red-200 text-red-600 hover:bg-red-50 rounded-full bg-transparent'
@@ -100,6 +109,8 @@ export function Navbar() {
 				isOpen={isMobileMenuOpen}
 				onClose={() => setIsMobileMenuOpen(false)}
 				navItems={navItems}
+				user={user}
+				logout={handleLogout}
 			/>
 		</nav>
 	);

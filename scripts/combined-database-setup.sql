@@ -7,10 +7,6 @@
 -- ------------------------------------------------------------------
 -- 📉 Drop existing objects for a clean setup
 -- ------------------------------------------------------------------
-DROP FUNCTION IF EXISTS authenticate_user (VARCHAR, VARCHAR) CASCADE;
-
-DROP FUNCTION IF EXISTS update_user_password (VARCHAR, VARCHAR, VARCHAR) CASCADE;
-
 DROP FUNCTION IF EXISTS update_daily_report () CASCADE;
 
 DROP FUNCTION IF EXISTS update_updated_at_column () CASCADE;
@@ -33,8 +29,6 @@ DROP TABLE IF EXISTS customer_transactions CASCADE;
 
 DROP TABLE IF EXISTS transactions CASCADE;
 
-DROP TABLE IF EXISTS users CASCADE;
-
 DROP TABLE IF EXISTS daily_reports CASCADE;
 
 DROP TABLE IF EXISTS products CASCADE;
@@ -54,20 +48,10 @@ CREATE TABLE products (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create users table for authentication
-CREATE TABLE users (
-    id BIGSERIAL PRIMARY KEY,
-    username VARCHAR(50) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    last_login TIMESTAMP WITH TIME ZONE
-);
-
 -- Create transactions table (renamed from customer_transactions)
 CREATE TABLE transactions (
     id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT NOT NULL REFERENCES users (id) ON DELETE RESTRICT,
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE RESTRICT,
     total_price DECIMAL(12, 2) NOT NULL DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -104,10 +88,6 @@ CREATE INDEX idx_products_name ON products (name);
 
 CREATE INDEX idx_products_current_stock ON products (current_stock);
 
-CREATE INDEX idx_users_username ON users (username);
-
-CREATE INDEX idx_transactions_user_id ON transactions (user_id);
-
 CREATE INDEX idx_transactions_created_at ON transactions (created_at);
 
 CREATE INDEX idx_transaction_details_transaction_id ON transaction_details (transaction_id);
@@ -132,25 +112,9 @@ CREATE TRIGGER update_products_updated_at BEFORE
 UPDATE ON products FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column ();
 
-CREATE TRIGGER update_users_updated_at BEFORE
-UPDATE ON users FOR EACH ROW
-EXECUTE FUNCTION update_updated_at_column ();
-
 CREATE TRIGGER update_transactions_updated_at BEFORE
 UPDATE ON transactions FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column ();
-
--- Function to authenticate user
-CREATE OR REPLACE FUNCTION authenticate_user (p_username VARCHAR, p_password VARCHAR) RETURNS TABLE (user_id BIGINT, username VARCHAR) SECURITY DEFINER AS $$
-BEGIN
-    RETURN QUERY
-    SELECT u.id, u.username
-    FROM users u
-    WHERE u.username = p_username AND u.password_hash = p_password;
-
-    UPDATE users SET last_login = NOW() WHERE users.username = p_username;
-END;
-$$ language 'plpgsql';
 
 -- Function to calculate and update transaction total (patched version)
 CREATE OR REPLACE FUNCTION update_transaction_total (p_transaction_id BIGINT) RETURNS DECIMAL(12, 2) AS $$
@@ -254,8 +218,6 @@ $$ language 'plpgsql';
 -- ------------------------------------------------------------------
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-
 ALTER TABLE transactions ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE transaction_details ENABLE ROW LEVEL SECURITY;
@@ -263,8 +225,6 @@ ALTER TABLE transaction_details ENABLE ROW LEVEL SECURITY;
 ALTER TABLE daily_reports ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Allow all operations on products" ON products FOR ALL USING (true);
-
-CREATE POLICY "Allow all operations on users" ON users FOR ALL USING (true);
 
 CREATE POLICY "Allow all operations on transactions" ON transactions FOR ALL USING (true);
 
@@ -275,16 +235,6 @@ CREATE POLICY "Allow all operations on daily_reports" ON daily_reports FOR ALL U
 -- ------------------------------------------------------------------
 -- 💾 Insert Sample Data
 -- ------------------------------------------------------------------
--- Insert default users
-INSERT INTO
-    users (username, password_hash)
-VALUES
-    ('admin', 'admin123'),
-    ('nay', 'admin123'),
-    ('kasir1', 'admin123'),
-    ('kasir2', 'admin123')
-ON CONFLICT (username) DO NOTHING;
-
 -- Insert sample products
 INSERT INTO
     products (name, price, current_stock, min_stock)
@@ -301,12 +251,33 @@ VALUES
     ('Klepon', 1200.00, 25, 15);
 
 -- Insert sample transactions
-INSERT INTO
-    transactions (user_id)
-VALUES
-    (1),
-    (1),
-    (2);
+DO $
+DECLARE
+    sample_user_id_1 uuid;
+    sample_user_id_2 uuid;
+BEGIN
+    -- Select the first two users from auth.users to act as sample users.
+    -- In a local dev environment, you should create at least one user manually
+    -- via the Supabase UI or API before running this script.
+    SELECT id INTO sample_user_id_1 FROM auth.users ORDER BY email LIMIT 1;
+    SELECT id INTO sample_user_id_2 FROM auth.users ORDER BY email OFFSET 1 LIMIT 1;
+
+    -- If only one user exists, use that user for all transactions.
+    IF sample_user_id_2 IS NULL THEN
+        sample_user_id_2 := sample_user_id_1;
+    END IF;
+
+    -- Proceed only if at least one user is found.
+    IF sample_user_id_1 IS NOT NULL THEN
+        INSERT INTO transactions (user_id)
+        VALUES
+            (sample_user_id_1),
+            (sample_user_id_1),
+            (sample_user_id_2);
+    ELSE
+        RAISE NOTICE 'No users found in auth.users. Skipping sample transaction creation.';
+    END IF;
+END $;
 
 -- Insert sample transaction details
 INSERT INTO
@@ -374,12 +345,6 @@ SET
 -- ------------------------------------------------------------------
 SELECT
     'Database setup completed successfully!' as message;
-
-SELECT
-    'Users created:' as info,
-    COUNT(*) as count
-FROM
-    users;
 
 SELECT
     'Products created:' as info,

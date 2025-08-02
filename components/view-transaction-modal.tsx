@@ -79,7 +79,7 @@ export function ViewTransactionModal({
 							<User className='h-4 w-4' /> Admin
 						</p>
 						<p className='font-semibold'>
-							{transaction.users?.username}
+							{transaction.users?.email}
 						</p>
 					</div>
 					<div>
