@@ -51,7 +51,7 @@ CREATE TABLE products (
 -- Create transactions table (renamed from customer_transactions)
 CREATE TABLE transactions (
     id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT NOT NULL REFERENCES auth.users (id) ON DELETE RESTRICT,
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE RESTRICT,
     total_price DECIMAL(12, 2) NOT NULL DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
