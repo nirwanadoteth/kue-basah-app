@@ -1,117 +1,141 @@
-'use client';
+"use client"
 
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Cake, Sparkles, LogOut, User, Menu, X } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { MobileNav } from './mobile-nav';
-import { AuthService, type User as AuthUser } from '@/lib/auth';
+import Link from "next/link"
+import { usePathname, useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { Cake, Sparkles, LogOut, User, Menu, X } from "lucide-react"
+import { useState, useEffect } from "react"
+import { MobileNav } from "./mobile-nav"
+import { AuthService, type User as AuthUser } from "@/lib/auth"
 
 export function Navbar() {
-	const pathname = usePathname();
-	const router = useRouter();
-	const [user, setUser] = useState<AuthUser | null>(null);
-	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const pathname = usePathname()
+  const router = useRouter()
+  const [user, setUser] = useState<AuthUser | null>(null)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
-	useEffect(() => {
-		const fetchUser = async () => {
-			const currentUser = await AuthService.getCurrentUser();
-			setUser(currentUser);
-		};
-		fetchUser();
-	}, []);
+  useEffect(() => {
+    const fetchUser = async () => {
+      // Don't fetch user if on login page
+      if (pathname === "/login") {
+        setIsLoading(false)
+        return
+      }
 
-	if (pathname === '/login') {
-		return null;
-	}
+      try {
+        const currentUser = await AuthService.getCurrentUser()
+        setUser(currentUser)
+      } catch (error) {
+        console.error("Error fetching user:", error)
+        // If there's an auth error and we're not on login page, redirect to login
+        if (pathname !== "/login") {
+          router.push("/login")
+        }
+      } finally {
+        setIsLoading(false)
+      }
+    }
 
-	const handleLogout = async () => {
-		await AuthService.logout();
-		router.push('/login');
-	};
+    fetchUser()
+  }, [pathname, router])
 
-	const navItems = [
-		{ href: '/', label: 'Dashboard' },
-		{ href: '/inventaris', label: 'Inventaris' },
-		{ href: '/pesanan', label: 'Transaksi' },
-		{ href: '/laporan', label: 'Laporan' },
-	];
+  // Don't render navbar on login page
+  if (pathname === "/login") {
+    return null
+  }
 
-	return (
-		<nav className='bg-white/90 backdrop-blur-md border-b border-pink-200/50 px-4 sm:px-6 py-4 sticky top-0 z-50 shadow-sm'>
-			<div className='flex items-center justify-between'>
-				<div className='flex items-center space-x-3'>
-					<div className='relative'>
-						<Cake className='h-8 w-8 text-pink-500' />
-						<Sparkles className='h-4 w-4 text-purple-400 absolute -top-1 -right-1 animate-pulse-soft' />
-					</div>
-					<div>
-						<span className='text-2xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent'>
-							NAY&apos;S CAKE
-						</span>
-						<p className='text-xs text-gray-500 -mt-1 hidden sm:block'>
-							Sweet Inventory Management
-						</p>
-					</div>
-				</div>
+  // Don't render navbar while loading user data
+  if (isLoading) {
+    return null
+  }
 
-				<div className='hidden md:flex space-x-1'>
-					{navItems.map((item) => (
-						<Link
-							key={item.href}
-							href={item.href}
-							className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-								pathname === item.href
-									? 'bg-gradient-to-r from-pink-400 to-purple-400 text-white shadow-lg shadow-pink-200/50'
-									: 'text-gray-600 hover:text-pink-500 hover:bg-pink-50'
-							}`}
-						>
-							{item.label}
-						</Link>
-					))}
-				</div>
+  // If no user and not on login page, don't render navbar
+  if (!user && pathname !== "/login") {
+    return null
+  }
 
-				<div className='hidden md:flex items-center gap-4'>
-					{user && (
-						<div className='flex items-center gap-2 text-sm text-gray-600'>
-							<User className='h-4 w-4' />
-							<span className='font-medium'>{user.email}</span>
-						</div>
-					)}
-					<Button
-						onClick={handleLogout}
-						variant='outline'
-						size='sm'
-						className='border-red-200 text-red-600 hover:bg-red-50 rounded-full bg-transparent'
-					>
-						<LogOut className='h-4 w-4 mr-2' />
-						Keluar
-					</Button>
-				</div>
+  const handleLogout = async () => {
+    try {
+      await AuthService.logout()
+      setUser(null)
+      router.push("/login")
+    } catch (error) {
+      console.error("Logout error:", error)
+    }
+  }
 
-				<div className='md:hidden'>
-					<Button
-						onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-						variant='ghost'
-						size='icon'
-					>
-						{isMobileMenuOpen ? (
-							<X className='h-6 w-6' />
-						) : (
-							<Menu className='h-6 w-6' />
-						)}
-					</Button>
-				</div>
-			</div>
+  const navItems = [
+    { href: "/", label: "Dashboard" },
+    { href: "/inventaris", label: "Inventaris" },
+    { href: "/pesanan", label: "Transaksi" },
+    { href: "/laporan", label: "Laporan" },
+  ]
 
-			<MobileNav
-				isOpen={isMobileMenuOpen}
-				onClose={() => setIsMobileMenuOpen(false)}
-				navItems={navItems}
-				user={user}
-				logout={handleLogout}
-			/>
-		</nav>
-	);
+  return (
+    <nav className="bg-white/90 backdrop-blur-md border-b border-pink-200/50 px-4 sm:px-6 py-4 sticky top-0 z-50 shadow-sm">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <div className="relative">
+            <Cake className="h-8 w-8 text-pink-500" />
+            <Sparkles className="h-4 w-4 text-purple-400 absolute -top-1 -right-1 animate-pulse-soft" />
+          </div>
+          <div>
+            <span className="text-2xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
+              NAY&apos;S CAKE
+            </span>
+            <p className="text-xs text-gray-500 -mt-1 hidden sm:block">Sweet Inventory Management</p>
+          </div>
+        </div>
+
+        <div className="hidden md:flex space-x-1">
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                pathname === item.href
+                  ? "bg-gradient-to-r from-pink-400 to-purple-400 text-white shadow-lg shadow-pink-200/50"
+                  : "text-gray-600 hover:text-pink-500 hover:bg-pink-50"
+              }`}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
+
+        <div className="hidden md:flex items-center gap-4">
+          {user && (
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <User className="h-4 w-4" />
+              <span className="font-medium">{user.email}</span>
+            </div>
+          )}
+          <Button
+            onClick={handleLogout}
+            variant="outline"
+            size="sm"
+            className="border-red-200 text-red-600 hover:bg-red-50 rounded-full bg-transparent"
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Keluar
+          </Button>
+        </div>
+
+        <div className="md:hidden">
+          <Button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} variant="ghost" size="icon">
+            {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </Button>
+        </div>
+      </div>
+
+      <MobileNav
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
+        navItems={navItems}
+        user={user}
+        logout={handleLogout}
+      />
+    </nav>
+  )
 }
