@@ -1,5 +1,5 @@
-'use client';
+'use client'
 
-import { Toaster } from '@/components/ui/sonner';
+import { Toaster } from '@/components/ui/sonner'
 
-export { Toaster };
+export { Toaster }

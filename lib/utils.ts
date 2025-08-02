@@ -1,9 +1,5 @@
-import { type ClassValue, clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-
-export function getPathname() {
-	return typeof window !== 'undefined' ? window.location.pathname : '';
-}
+import { type ClassValue, clsx } from 'clsx'
+import { twMerge } from 'tailwind-merge'
 
 /**
  * Combines multiple class name values into a single optimized Tailwind CSS class string.
@@ -13,7 +9,7 @@ export function getPathname() {
  * @returns The merged class name string
  */
 export function cn(...inputs: ClassValue[]) {
-	return twMerge(clsx(inputs));
+  return twMerge(clsx(inputs))
 }
 
 /**
@@ -26,23 +22,23 @@ export function cn(...inputs: ClassValue[]) {
  * @returns The formatted date string, or 'N/A'/'Invalid Date' for invalid input
  */
 export function formatDate(
-	dateString: string | null | undefined,
-	locale = 'id-ID'
+  dateString: string | null | undefined,
+  locale = 'id-ID',
 ): string {
-	if (!dateString || typeof dateString !== 'string') {
-		return 'N/A';
-	}
+  if (!dateString || typeof dateString !== 'string') {
+    return 'N/A'
+  }
 
-	const date = new Date(dateString);
-	if (isNaN(date.getTime())) {
-		return 'Invalid Date';
-	}
+  const date = new Date(dateString)
+  if (isNaN(date.getTime())) {
+    return 'Invalid Date'
+  }
 
-	return date.toLocaleDateString(locale, {
-		day: '2-digit',
-		month: 'short',
-		year: 'numeric',
-	});
+  return date.toLocaleDateString(locale, {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  })
 }
 
 /**
@@ -55,23 +51,23 @@ export function formatDate(
  * @returns The formatted currency string
  */
 export function formatCurrency(
-	amount: number | null | undefined,
-	locale = 'id-ID'
+  amount: number | null | undefined,
+  locale = 'id-ID',
 ): string {
-	if (
-		typeof amount !== 'number' ||
-		isNaN(amount) ||
-		amount === null ||
-		amount === undefined
-	) {
-		return 'Rp 0';
-	}
+  if (
+    typeof amount !== 'number' ||
+    isNaN(amount) ||
+    amount === null ||
+    amount === undefined
+  ) {
+    return 'Rp 0'
+  }
 
-	return new Intl.NumberFormat(locale, {
-		style: 'currency',
-		currency: 'IDR',
-		minimumFractionDigits: 0,
-	}).format(amount);
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+  }).format(amount)
 }
 
 /**
@@ -81,18 +77,18 @@ export function formatCurrency(
  * @returns The string representation of the input, or an empty string if the input is null or undefined
  */
 export function safeString(value: unknown): string {
-	if (value === null || value === undefined) {
-		return '';
-	}
-	return String(value);
+  if (value === null || value === undefined) {
+    return ''
+  }
+  return String(value)
 }
 
 /**
  * Returns the current date as an ISO-formatted string in `YYYY-MM-DD` format.
  */
 export function createDateString(): string {
-	const now = new Date();
-	return now.toISOString().split('T')[0];
+  const now = new Date()
+  return now.toISOString().split('T')[0]
 }
 
 /**
@@ -103,11 +99,11 @@ export function createDateString(): string {
  * @returns The parsed integer, or the fallback if parsing fails
  */
 export function safeParseInt(value: unknown, fallback = 0): number {
-	if (value === null || value === undefined) {
-		return fallback;
-	}
-	const parsed = Number.parseInt(String(value), 10);
-	return isNaN(parsed) ? fallback : parsed;
+  if (value === null || value === undefined) {
+    return fallback
+  }
+  const parsed = Number.parseInt(String(value), 10)
+  return isNaN(parsed) ? fallback : parsed
 }
 
 /**
@@ -118,9 +114,9 @@ export function safeParseInt(value: unknown, fallback = 0): number {
  * @returns The parsed floating-point number, or the fallback if parsing is unsuccessful
  */
 export function safeParseFloat(value: unknown, fallback = 0): number {
-	if (value === null || value === undefined) {
-		return fallback;
-	}
-	const parsed = Number.parseFloat(String(value));
-	return isNaN(parsed) ? fallback : parsed;
+  if (value === null || value === undefined) {
+    return fallback
+  }
+  const parsed = Number.parseFloat(String(value))
+  return isNaN(parsed) ? fallback : parsed
 }

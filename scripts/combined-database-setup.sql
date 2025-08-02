@@ -7,100 +7,100 @@
 -- ------------------------------------------------------------------
 -- 📉 Drop existing objects for a clean setup
 -- ------------------------------------------------------------------
-DROP FUNCTION IF EXISTS update_daily_report () CASCADE;
+drop function IF exists update_daily_report () CASCADE;
 
-DROP FUNCTION IF EXISTS update_updated_at_column () CASCADE;
+drop function IF exists update_updated_at_column () CASCADE;
 
-DROP FUNCTION IF EXISTS generate_daily_report () CASCADE;
+drop function IF exists generate_daily_report () CASCADE;
 
-DROP FUNCTION IF EXISTS create_transaction_with_stock_update (BIGINT, VARCHAR, VARCHAR, INTEGER, TEXT, DATE) CASCADE;
+drop function IF exists create_transaction_with_stock_update (BIGINT, VARCHAR, VARCHAR, INTEGER, TEXT, DATE) CASCADE;
 
-DROP FUNCTION IF EXISTS update_transaction_total (BIGINT) CASCADE;
+drop function IF exists update_transaction_total (BIGINT) CASCADE;
 
-DROP FUNCTION IF EXISTS add_transaction_item (BIGINT, BIGINT, INTEGER) CASCADE;
+drop function IF exists add_transaction_item (BIGINT, BIGINT, INTEGER) CASCADE;
 
-DROP FUNCTION IF EXISTS complete_customer_transaction (BIGINT) CASCADE;
+drop function IF exists complete_customer_transaction (BIGINT) CASCADE;
 
-DROP FUNCTION IF EXISTS complete_transaction (BIGINT) CASCADE;
+drop function IF exists complete_transaction (BIGINT) CASCADE;
 
-DROP TABLE IF EXISTS transaction_details CASCADE;
+drop table if exists transaction_details CASCADE;
 
-DROP TABLE IF EXISTS customer_transactions CASCADE;
+drop table if exists customer_transactions CASCADE;
 
-DROP TABLE IF EXISTS transactions CASCADE;
+drop table if exists transactions CASCADE;
 
-DROP TABLE IF EXISTS daily_reports CASCADE;
+drop table if exists daily_reports CASCADE;
 
-DROP TABLE IF EXISTS products CASCADE;
+drop table if exists products CASCADE;
 
 -- ------------------------------------------------------------------
 -- 🏗️ Create Tables
 -- ------------------------------------------------------------------
 -- Create products table
-CREATE TABLE products (
-    id BIGSERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    price DECIMAL(10, 2) NOT NULL DEFAULT 0,
-    current_stock INTEGER NOT NULL DEFAULT 0,
-    min_stock INTEGER NOT NULL DEFAULT 20,
-    total_value DECIMAL(12, 2) GENERATED ALWAYS AS (current_stock * price) STORED,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+create table products (
+    id BIGSERIAL primary key,
+    name VARCHAR(255) not null,
+    price DECIMAL(10, 2) not null default 0,
+    current_stock INTEGER not null default 0,
+    min_stock INTEGER not null default 20,
+    total_value DECIMAL(12, 2) GENERATED ALWAYS as (current_stock * price) STORED,
+    created_at timestamp with time zone default NOW(),
+    updated_at timestamp with time zone default NOW()
 );
 
 -- Create transactions table (renamed from customer_transactions)
-CREATE TABLE transactions (
-    id BIGSERIAL PRIMARY KEY,
-    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE RESTRICT,
-    total_price DECIMAL(12, 2) NOT NULL DEFAULT 0,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+create table transactions (
+    id BIGSERIAL primary key,
+    user_id UUID not null references auth.users (id) on delete RESTRICT,
+    total_price DECIMAL(12, 2) not null default 0,
+    created_at timestamp with time zone default NOW(),
+    updated_at timestamp with time zone default NOW()
 );
 
 -- Create transaction_details table
-CREATE TABLE transaction_details (
-    id BIGSERIAL PRIMARY KEY,
-    transaction_id BIGINT NOT NULL REFERENCES transactions (id) ON DELETE CASCADE,
-    product_id BIGINT REFERENCES products (id) ON DELETE SET NULL,
-    product_name VARCHAR(255) NOT NULL,
-    product_price DECIMAL(10, 2) NOT NULL,
-    quantity INTEGER NOT NULL CHECK (quantity > 0),
-    subtotal DECIMAL(12, 2) GENERATED ALWAYS AS (product_price * quantity) STORED,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+create table transaction_details (
+    id BIGSERIAL primary key,
+    transaction_id BIGINT not null references transactions (id) on delete CASCADE,
+    product_id BIGINT references products (id) on delete set null,
+    product_name VARCHAR(255) not null,
+    product_price DECIMAL(10, 2) not null,
+    quantity INTEGER not null check (quantity > 0),
+    subtotal DECIMAL(12, 2) GENERATED ALWAYS as (product_price * quantity) STORED,
+    created_at timestamp with time zone default NOW()
 );
 
 -- Create daily_reports table for analytics
-CREATE TABLE daily_reports (
-    id BIGSERIAL PRIMARY KEY,
-    report_date DATE NOT NULL DEFAULT CURRENT_DATE,
-    total_stock INTEGER NOT NULL DEFAULT 0,
-    total_sales INTEGER NOT NULL DEFAULT 0,
-    total_value DECIMAL(12, 2) NOT NULL DEFAULT 0,
-    low_stock_items INTEGER NOT NULL DEFAULT 0,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    UNIQUE (report_date)
+create table daily_reports (
+    id BIGSERIAL primary key,
+    report_date DATE not null default CURRENT_DATE,
+    total_stock INTEGER not null default 0,
+    total_sales INTEGER not null default 0,
+    total_value DECIMAL(12, 2) not null default 0,
+    low_stock_items INTEGER not null default 0,
+    created_at timestamp with time zone default NOW(),
+    unique (report_date)
 );
 
 -- ------------------------------------------------------------------
 -- ⚡ Create Indexes for Performance
 -- ------------------------------------------------------------------
-CREATE INDEX idx_products_name ON products (name);
+create index idx_products_name on products (name);
 
-CREATE INDEX idx_products_current_stock ON products (current_stock);
+create index idx_products_current_stock on products (current_stock);
 
-CREATE INDEX idx_transactions_created_at ON transactions (created_at);
+create index idx_transactions_created_at on transactions (created_at);
 
-CREATE INDEX idx_transaction_details_transaction_id ON transaction_details (transaction_id);
+create index idx_transaction_details_transaction_id on transaction_details (transaction_id);
 
-CREATE INDEX idx_transaction_details_product_id ON transaction_details (product_id);
+create index idx_transaction_details_product_id on transaction_details (product_id);
 
-CREATE INDEX idx_daily_reports_date ON daily_reports (report_date);
+create index idx_daily_reports_date on daily_reports (report_date);
 
 -- ------------------------------------------------------------------
 -- ⚙️ Create Functions and Triggers
 -- ------------------------------------------------------------------
 -- Function to update updated_at timestamp
-CREATE OR REPLACE FUNCTION update_updated_at_column () RETURNS TRIGGER AS $$
+create or replace function update_updated_at_column () RETURNS TRIGGER as $$
 BEGIN
     NEW.updated_at = NOW();
     RETURN NEW;
@@ -108,16 +108,16 @@ END;
 $$ language 'plpgsql';
 
 -- Triggers for updated_at
-CREATE TRIGGER update_products_updated_at BEFORE
-UPDATE ON products FOR EACH ROW
-EXECUTE FUNCTION update_updated_at_column ();
+create trigger update_products_updated_at BEFORE
+update on products for EACH row
+execute FUNCTION update_updated_at_column ();
 
-CREATE TRIGGER update_transactions_updated_at BEFORE
-UPDATE ON transactions FOR EACH ROW
-EXECUTE FUNCTION update_updated_at_column ();
+create trigger update_transactions_updated_at BEFORE
+update on transactions for EACH row
+execute FUNCTION update_updated_at_column ();
 
 -- Function to calculate and update transaction total (patched version)
-CREATE OR REPLACE FUNCTION update_transaction_total (p_transaction_id BIGINT) RETURNS DECIMAL(12, 2) AS $$
+create or replace function update_transaction_total (p_transaction_id BIGINT) RETURNS DECIMAL(12, 2) as $$
 DECLARE
     v_new_total DECIMAL(12,2);
 BEGIN
@@ -135,11 +135,11 @@ END;
 $$ language 'plpgsql';
 
 -- Function to add item to transaction (patched version)
-CREATE OR REPLACE FUNCTION add_transaction_item (
+create or replace function add_transaction_item (
     p_transaction_id BIGINT,
     p_product_id BIGINT,
     p_quantity INTEGER
-) RETURNS TABLE (
+) RETURNS table (
     out_detail_id BIGINT,
     out_transaction_id BIGINT,
     out_product_id BIGINT,
@@ -147,7 +147,7 @@ CREATE OR REPLACE FUNCTION add_transaction_item (
     out_product_price DECIMAL,
     out_quantity INTEGER,
     out_subtotal DECIMAL
-) AS $$
+) as $$
 DECLARE
     v_product_name   VARCHAR(255);
     v_product_price  DECIMAL(10,2);
@@ -191,7 +191,7 @@ END;
 $$ language 'plpgsql';
 
 -- Function to complete transaction (reduce stock)
-CREATE OR REPLACE FUNCTION complete_transaction (p_transaction_id BIGINT) RETURNS BOOLEAN AS $$
+create or replace function complete_transaction (p_transaction_id BIGINT) RETURNS BOOLEAN as $$
 DECLARE
     detail_record RECORD;
 BEGIN
@@ -216,29 +216,29 @@ $$ language 'plpgsql';
 -- ------------------------------------------------------------------
 -- 🔒 Enable Row Level Security (RLS) and Policies
 -- ------------------------------------------------------------------
-ALTER TABLE products ENABLE ROW LEVEL SECURITY;
+alter table products ENABLE row LEVEL SECURITY;
 
-ALTER TABLE transactions ENABLE ROW LEVEL SECURITY;
+alter table transactions ENABLE row LEVEL SECURITY;
 
-ALTER TABLE transaction_details ENABLE ROW LEVEL SECURITY;
+alter table transaction_details ENABLE row LEVEL SECURITY;
 
-ALTER TABLE daily_reports ENABLE ROW LEVEL SECURITY;
+alter table daily_reports ENABLE row LEVEL SECURITY;
 
-CREATE POLICY "Allow all operations on products" ON products FOR ALL USING (true);
+create policy "Allow all operations on products" on products for all using (true);
 
-CREATE POLICY "Allow all operations on transactions" ON transactions FOR ALL USING (true);
+create policy "Allow all operations on transactions" on transactions for all using (true);
 
-CREATE POLICY "Allow all operations on transaction_details" ON transaction_details FOR ALL USING (true);
+create policy "Allow all operations on transaction_details" on transaction_details for all using (true);
 
-CREATE POLICY "Allow all operations on daily_reports" ON daily_reports FOR ALL USING (true);
+create policy "Allow all operations on daily_reports" on daily_reports for all using (true);
 
 -- ------------------------------------------------------------------
 -- 💾 Insert Sample Data
 -- ------------------------------------------------------------------
 -- Insert sample products
-INSERT INTO
+insert into
     products (name, price, current_stock, min_stock)
-VALUES
+values
     ('Dadar Gulung', 1000.00, 25, 20),
     ('Pastel', 1000.00, 43, 20),
     ('Risoles', 1000.00, 42, 20),
@@ -251,7 +251,7 @@ VALUES
     ('Klepon', 1200.00, 25, 15);
 
 -- Insert sample transactions
-DO $
+do $$
 DECLARE
     sample_user_id_1 uuid;
     sample_user_id_2 uuid;
@@ -277,10 +277,11 @@ BEGIN
     ELSE
         RAISE NOTICE 'No users found in auth.users. Skipping sample transaction creation.';
     END IF;
-END $;
+END;
+$$ LANGUAGE plpgsql;
 
 -- Insert sample transaction details
-INSERT INTO
+insert into
     transaction_details (
         transaction_id,
         product_id,
@@ -288,7 +289,7 @@ INSERT INTO
         product_price,
         quantity
     )
-VALUES
+values
     (1, 1, 'Dadar Gulung', 1000, 5),
     (1, 2, 'Pastel', 1000, 3),
     (1, 6, 'Bacang', 5000, 1),
@@ -299,17 +300,17 @@ VALUES
     (3, 8, 'Kue Lapis', 1000, 6);
 
 -- Update totals for sample transactions
-SELECT
+select
     update_transaction_total (1);
 
-SELECT
+select
     update_transaction_total (2);
 
-SELECT
+select
     update_transaction_total (3);
 
 -- Create initial daily report
-INSERT INTO
+insert into
     daily_reports (
         report_date,
         total_stock,
@@ -317,24 +318,24 @@ INSERT INTO
         total_value,
         low_stock_items
     )
-SELECT
+select
     CURRENT_DATE,
     COALESCE(SUM(current_stock), 0),
     COALESCE(COUNT(*), 0),
     COALESCE(SUM(current_stock * price), 0),
     COALESCE(
         SUM(
-            CASE
-                WHEN current_stock <= min_stock THEN 1
-                ELSE 0
-            END
+            case
+                when current_stock <= min_stock then 1
+                else 0
+            end
         ),
         0
     )
-FROM
+from
     products
-ON CONFLICT (report_date) DO UPDATE
-SET
+on conflict (report_date) do update
+set
     total_stock = EXCLUDED.total_stock,
     total_sales = EXCLUDED.total_sales,
     total_value = EXCLUDED.total_value,
@@ -343,29 +344,217 @@ SET
 -- ------------------------------------------------------------------
 -- ✅ Verification
 -- ------------------------------------------------------------------
-SELECT
+select
     'Database setup completed successfully!' as message;
 
-SELECT
+select
     'Products created:' as info,
     COUNT(*) as count
-FROM
+from
     products;
 
-SELECT
+select
     'Transactions created:' as info,
     COUNT(*) as count
-FROM
+from
     transactions;
 
-SELECT
+select
     'Transaction Details created:' as info,
     COUNT(*) as count
-FROM
+from
     transaction_details;
 
-SELECT
+select
     'Daily Report created:' as info,
     report_date
-FROM
+from
     daily_reports;
+
+-- V2: Security Hardening
+-- This script addresses security warnings from Supabase.
+-- ------------------------------------------------------------------
+-- 🔒 Row Level Security (RLS) for audit_log
+-- ------------------------------------------------------------------
+-- 1. Enable RLS on the audit_log table
+alter table public.audit_log ENABLE row LEVEL SECURITY;
+
+-- 2. Create a restrictive default policy on audit_log
+-- This policy denies all access by default. More specific, permissive
+-- policies should be created for roles that need access.
+drop policy IF exists "Deny all access to audit_log" on public.audit_log;
+
+create policy "Deny all access to audit_log" on public.audit_log for all using (false)
+with
+    check (false);
+
+-- ------------------------------------------------------------------
+-- ⚙️ Secure Functions by Setting search_path
+-- ------------------------------------------------------------------
+-- Function to update updated_at timestamp
+create or replace function public.update_updated_at_column () RETURNS TRIGGER as $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql
+set
+    search_path = public;
+
+-- Function to calculate and update transaction total
+create or replace function public.update_transaction_total (p_transaction_id BIGINT) RETURNS DECIMAL(12, 2) as $$
+DECLARE
+    v_new_total DECIMAL(12,2);
+BEGIN
+    SELECT COALESCE(SUM(td.subtotal), 0)
+      INTO v_new_total
+      FROM transaction_details AS td
+     WHERE td.transaction_id = p_transaction_id;
+
+    UPDATE transactions AS t
+       SET total_price = v_new_total
+     WHERE t.id = p_transaction_id;
+
+    RETURN v_new_total;
+END;
+$$ LANGUAGE plpgsql
+set
+    search_path = public;
+
+-- Function to add item to transaction
+create or replace function public.add_transaction_item (
+    p_transaction_id BIGINT,
+    p_product_id BIGINT,
+    p_quantity INTEGER
+) RETURNS table (
+    out_detail_id BIGINT,
+    out_transaction_id BIGINT,
+    out_product_id BIGINT,
+    out_product_name VARCHAR,
+    out_product_price DECIMAL,
+    out_quantity INTEGER,
+    out_subtotal DECIMAL
+) as $$
+DECLARE
+    v_product_name   VARCHAR(255);
+    v_product_price  DECIMAL(10,2);
+    v_current_stock  INTEGER;
+    v_detail_id      BIGINT;
+BEGIN
+    SELECT p.name, p.price, p.current_stock
+      INTO v_product_name, v_product_price, v_current_stock
+      FROM products AS p
+     WHERE p.id = p_product_id;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Product with id % not found', p_product_id;
+    END IF;
+
+    IF v_current_stock < p_quantity THEN
+        RAISE EXCEPTION 'Insufficient stock. Available: %, Requested: %', v_current_stock, p_quantity;
+    END IF;
+
+    IF EXISTS (
+        SELECT 1 FROM transaction_details AS td
+         WHERE td.transaction_id = p_transaction_id AND td.product_id = p_product_id
+    ) THEN
+        UPDATE transaction_details AS td
+           SET quantity = td.quantity + p_quantity
+         WHERE td.transaction_id = p_transaction_id AND td.product_id = p_product_id
+        RETURNING td.id INTO v_detail_id;
+    ELSE
+        INSERT INTO transaction_details (transaction_id, product_id, product_name, product_price, quantity)
+        VALUES (p_transaction_id, p_product_id, v_product_name, v_product_price, p_quantity)
+        RETURNING id INTO v_detail_id;
+    END IF;
+
+    PERFORM update_transaction_total(p_transaction_id);
+
+    RETURN QUERY
+    SELECT td.id, td.transaction_id, td.product_id, td.product_name, td.product_price, td.quantity, td.subtotal
+      FROM transaction_details AS td
+     WHERE td.id = v_detail_id;
+END;
+$$ LANGUAGE plpgsql
+set
+    search_path = public;
+
+-- Function to complete transaction (reduce stock)
+create or replace function public.complete_transaction (p_transaction_id BIGINT) RETURNS BOOLEAN as $$
+DECLARE
+    detail_record RECORD;
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM transactions WHERE id = p_transaction_id) THEN
+        RAISE EXCEPTION 'Transaction not found';
+    END IF;
+
+    FOR detail_record IN
+        SELECT product_id, quantity
+        FROM transaction_details
+        WHERE transaction_id = p_transaction_id
+    LOOP
+        UPDATE products
+        SET current_stock = current_stock - detail_record.quantity
+        WHERE id = detail_record.product_id;
+    END LOOP;
+
+    RETURN true;
+END;
+$$ LANGUAGE plpgsql
+set
+    search_path = public;
+
+-- Function for the audit trigger
+create or replace function public.audit_trigger_function () RETURNS TRIGGER as $$
+DECLARE
+    v_old_data jsonb;
+    v_new_data jsonb;
+BEGIN
+    IF (TG_OP = 'UPDATE') THEN
+        v_old_data := to_jsonb(OLD);
+        v_new_data := to_jsonb(NEW);
+        INSERT INTO public.audit_log (table_name, record_id, old_data, new_data, user_id)
+        VALUES (TG_TABLE_NAME, OLD.id, v_old_data, v_new_data, auth.uid());
+        RETURN NEW;
+    ELSIF (TG_OP = 'DELETE') THEN
+        v_old_data := to_jsonb(OLD);
+        INSERT INTO public.audit_log (table_name, record_id, old_data, user_id)
+        VALUES (TG_TABLE_NAME, OLD.id, v_old_data, auth.uid());
+        RETURN OLD;
+    ELSIF (TG_OP = 'INSERT') THEN
+        v_new_data := to_jsonb(NEW);
+        INSERT INTO public.audit_log (table_name, record_id, new_data, user_id)
+        VALUES (TG_TABLE_NAME, NEW.id, v_new_data, auth.uid());
+        RETURN NEW;
+    END IF;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql
+set
+    search_path = public;
+
+-- Function to clean up old audit logs
+create or replace function public.cleanup_audit_logs () RETURNS void as $$
+BEGIN
+    DELETE FROM public.audit_log WHERE created_at < NOW() - INTERVAL '30 days';
+END;
+$$ LANGUAGE plpgsql
+set
+    search_path = public;
+
+-- ------------------------------------------------------------------
+-- ✅ Verification
+-- ------------------------------------------------------------------
+select
+    'V2 Security hardening script applied successfully!' as message;
+
+alter table transactions
+drop constraint IF exists transactions_user_id_fkey;
+
+drop table if exists users;
+
+alter table transactions
+alter column user_id TYPE UUID using user_id::text::UUID;
+
+alter table transactions
+add constraint transactions_user_id_fkey foreign KEY (user_id) references auth.users (id) on delete RESTRICT;

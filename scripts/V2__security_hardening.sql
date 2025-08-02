@@ -4,32 +4,32 @@
 -- 🔒 Row Level Security (RLS) for audit_log
 -- ------------------------------------------------------------------
 -- 1. Enable RLS on the audit_log table
-ALTER TABLE public.audit_log ENABLE ROW LEVEL SECURITY;
+alter table public.audit_log ENABLE row LEVEL SECURITY;
 
 -- 2. Create a restrictive default policy on audit_log
 -- This policy denies all access by default. More specific, permissive
 -- policies should be created for roles that need access.
-DROP POLICY IF EXISTS "Deny all access to audit_log" ON public.audit_log;
+drop policy IF exists "Deny all access to audit_log" on public.audit_log;
 
-CREATE POLICY "Deny all access to audit_log" ON public.audit_log FOR ALL USING (false)
-WITH
-    CHECK (false);
+create policy "Deny all access to audit_log" on public.audit_log for all using (false)
+with
+    check (false);
 
 -- ------------------------------------------------------------------
 -- ⚙️ Secure Functions by Setting search_path
 -- ------------------------------------------------------------------
 -- Function to update updated_at timestamp
-CREATE OR REPLACE FUNCTION public.update_updated_at_column () RETURNS TRIGGER AS $$
+create or replace function public.update_updated_at_column () RETURNS TRIGGER as $$
 BEGIN
     NEW.updated_at = NOW();
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql
-SET
+set
     search_path = public;
 
 -- Function to calculate and update transaction total
-CREATE OR REPLACE FUNCTION public.update_transaction_total (p_transaction_id BIGINT) RETURNS DECIMAL(12, 2) AS $$
+create or replace function public.update_transaction_total (p_transaction_id BIGINT) RETURNS DECIMAL(12, 2) as $$
 DECLARE
     v_new_total DECIMAL(12,2);
 BEGIN
@@ -45,15 +45,15 @@ BEGIN
     RETURN v_new_total;
 END;
 $$ LANGUAGE plpgsql
-SET
+set
     search_path = public;
 
 -- Function to add item to transaction
-CREATE OR REPLACE FUNCTION public.add_transaction_item (
+create or replace function public.add_transaction_item (
     p_transaction_id BIGINT,
     p_product_id BIGINT,
     p_quantity INTEGER
-) RETURNS TABLE (
+) RETURNS table (
     out_detail_id BIGINT,
     out_transaction_id BIGINT,
     out_product_id BIGINT,
@@ -61,7 +61,7 @@ CREATE OR REPLACE FUNCTION public.add_transaction_item (
     out_product_price DECIMAL,
     out_quantity INTEGER,
     out_subtotal DECIMAL
-) AS $$
+) as $$
 DECLARE
     v_product_name   VARCHAR(255);
     v_product_price  DECIMAL(10,2);
@@ -103,11 +103,11 @@ BEGIN
      WHERE td.id = v_detail_id;
 END;
 $$ LANGUAGE plpgsql
-SET
+set
     search_path = public;
 
 -- Function to complete transaction (reduce stock)
-CREATE OR REPLACE FUNCTION public.complete_transaction (p_transaction_id BIGINT) RETURNS BOOLEAN AS $$
+create or replace function public.complete_transaction (p_transaction_id BIGINT) RETURNS BOOLEAN as $$
 DECLARE
     detail_record RECORD;
 BEGIN
@@ -128,11 +128,11 @@ BEGIN
     RETURN true;
 END;
 $$ LANGUAGE plpgsql
-SET
+set
     search_path = public;
 
 -- Function for the audit trigger
-CREATE OR REPLACE FUNCTION public.audit_trigger_function () RETURNS TRIGGER AS $$
+create or replace function public.audit_trigger_function () RETURNS TRIGGER as $$
 DECLARE
     v_old_data jsonb;
     v_new_data jsonb;
@@ -157,20 +157,20 @@ BEGIN
     RETURN NULL;
 END;
 $$ LANGUAGE plpgsql
-SET
+set
     search_path = public;
 
 -- Function to clean up old audit logs
-CREATE OR REPLACE FUNCTION public.cleanup_audit_logs () RETURNS void AS $$
+create or replace function public.cleanup_audit_logs () RETURNS void as $$
 BEGIN
     DELETE FROM public.audit_log WHERE created_at < NOW() - INTERVAL '30 days';
 END;
 $$ LANGUAGE plpgsql
-SET
+set
     search_path = public;
 
 -- ------------------------------------------------------------------
 -- ✅ Verification
 -- ------------------------------------------------------------------
-SELECT
+select
     'V2 Security hardening script applied successfully!' as message;
