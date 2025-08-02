@@ -115,7 +115,7 @@ export const testSupabaseConnection = async () => {
 export const checkTablesExist = async () => {
 	const tables = [
 		'products',
-		'users',
+		'auth.users',
 		'transactions',
 		'transaction_details',
 		'daily_reports',

@@ -24,10 +24,10 @@ export function LoginForm({
 	const [error, setError] = useState<string | null>(null);
 	const [isLoading, setIsLoading] = useState(false);
 	const router = useRouter();
+	const supabase = createClient();
 
 	const handleLogin = async (e: React.FormEvent) => {
 		e.preventDefault();
-		const supabase = createClient();
 		setIsLoading(true);
 		setError(null);
 
@@ -72,6 +72,7 @@ export function LoginForm({
 								/>
 							</div>
 							<div className='grid gap-2'>
+								<Label htmlFor='password'>Password</Label>
 								<Input
 									id='password'
 									type='password'

@@ -251,12 +251,33 @@ VALUES
     ('Klepon', 1200.00, 25, 15);
 
 -- Insert sample transactions
-INSERT INTO
-    transactions (user_id)
-VALUES
-    (1),
-    (1),
-    (2);
+DO $
+DECLARE
+    sample_user_id_1 uuid;
+    sample_user_id_2 uuid;
+BEGIN
+    -- Select the first two users from auth.users to act as sample users.
+    -- In a local dev environment, you should create at least one user manually
+    -- via the Supabase UI or API before running this script.
+    SELECT id INTO sample_user_id_1 FROM auth.users ORDER BY email LIMIT 1;
+    SELECT id INTO sample_user_id_2 FROM auth.users ORDER BY email OFFSET 1 LIMIT 1;
+
+    -- If only one user exists, use that user for all transactions.
+    IF sample_user_id_2 IS NULL THEN
+        sample_user_id_2 := sample_user_id_1;
+    END IF;
+
+    -- Proceed only if at least one user is found.
+    IF sample_user_id_1 IS NOT NULL THEN
+        INSERT INTO transactions (user_id)
+        VALUES
+            (sample_user_id_1),
+            (sample_user_id_1),
+            (sample_user_id_2);
+    ELSE
+        RAISE NOTICE 'No users found in auth.users. Skipping sample transaction creation.';
+    END IF;
+END $;
 
 -- Insert sample transaction details
 INSERT INTO

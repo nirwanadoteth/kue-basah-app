@@ -10,6 +10,7 @@ import { Toaster } from 'sonner';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -19,7 +20,6 @@ export const metadata: Metadata = {
 		'Sistem manajemen inventaris modern untuk toko kue basah dengan tema cotton candy yang manis',
 	generator: 'v0.dev',
 };
-
 export default async function RootLayout({
 	children,
 }: {
@@ -27,9 +27,13 @@ export default async function RootLayout({
 }) {
 	const supabase = await createClient();
 	const { data, error } = await supabase.auth.getUser();
+	const headersList = await headers();
+	const pathname = headersList.get('x-pathname') || '/';
 
 	if (error || !data?.user) {
-		redirect('/login');
+		if (pathname !== '/login') {
+			redirect('/login');
+		}
 	}
 
 	return (
