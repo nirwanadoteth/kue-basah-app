@@ -50,7 +50,7 @@ export function DatabaseSetupBanner() {
   }, [performDatabaseCheck])
 
   const handleRunSetup = () => {
-    window.open('/scripts/combined-database-setup.sql', '_blank')
+    window.open('/scripts/db.sql', '_blank')
   }
 
   const handleRetry = async () => {
