@@ -32,7 +32,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 font-sans antialiased min-h-screen;
+    @apply min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 font-sans antialiased;
   }
 }
 
@@ -42,10 +42,10 @@
   }
 
   .cotton-candy-card {
-    @apply bg-white/80 backdrop-blur-sm border border-pink-200/50 shadow-lg shadow-pink-100/50;
+    @apply border border-pink-200/50 bg-white/80 shadow-lg shadow-pink-100/50 backdrop-blur-sm;
   }
 
   .cotton-candy-button {
-    @apply bg-gradient-to-r from-pink-400 to-purple-400 hover:from-pink-500 hover:to-purple-500 text-white shadow-lg shadow-pink-200/50 transition-all duration-300;
+    @apply bg-gradient-to-r from-pink-400 to-purple-400 text-white shadow-lg shadow-pink-200/50 transition-all duration-300 hover:from-pink-500 hover:to-purple-500;
   }
 }
