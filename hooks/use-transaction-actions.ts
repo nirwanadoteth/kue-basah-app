@@ -18,6 +18,11 @@ export function useTransactionActions({
 
   const handleAddItem = useCallback(
     async (productId: number, quantity: number) => {
+      if (transactionId == null) {
+        toast.error('Buat transaksi terlebih dahulu')
+        return
+      }
+
       if (!productId || !quantity) {
         toast.error('Pilih produk dan masukkan jumlah')
         return

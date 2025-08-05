@@ -20,9 +20,10 @@ export class AuthService {
       }
 
       // Call the authentication function with plain password
+      // The database function will hash and compare it securely using bcrypt
       const { data, error } = await supabase.rpc('authenticate_user', {
         p_username: username.trim().toLowerCase(),
-        p_password: password, // Using plain password for now
+        p_password: password, // Plain password - hashed by database function
       })
 
       if (error) {

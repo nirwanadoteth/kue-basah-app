@@ -102,6 +102,10 @@ export class ProductsAPI {
   }
 
   static async search(query: string): Promise<Product[]> {
+    if (!query.trim()) {
+      return []
+    }
+
     const { data, error } = await supabase
       .from('products')
       .select('*')
@@ -118,20 +122,38 @@ export class ProductsAPI {
     totalValue: number
     lowStockCount: number
   }> {
-    const { data, error } = await supabase
-      .from('products')
-      .select('current_stock, total_value, min_stock')
+    // Use the RPC function for complex aggregations
+    const { data, error } = await supabase.rpc('get_product_stats')
 
-    if (error) handleSupabaseError(error, 'Failed to fetch product stats')
+    if (error) {
+      console.warn(
+        'RPC function get_product_stats not available, falling back to client-side calculation',
+      )
 
-    const products = data || []
+      // Fallback to client-side calculation if RPC function doesn't exist
+      const { data: products, error: productsError } = await supabase
+        .from('products')
+        .select('current_stock, total_value, min_stock')
+
+      if (productsError)
+        handleSupabaseError(productsError, 'Failed to fetch product stats')
+
+      const productData = products || []
+
+      return {
+        totalProducts: productData.length,
+        totalStock: productData.reduce((sum, p) => sum + p.current_stock, 0),
+        totalValue: productData.reduce((sum, p) => sum + p.total_value, 0),
+        lowStockCount: productData.filter((p) => p.current_stock <= p.min_stock)
+          .length,
+      }
+    }
 
     return {
-      totalProducts: products.length,
-      totalStock: products.reduce((sum, p) => sum + p.current_stock, 0),
-      totalValue: products.reduce((sum, p) => sum + p.total_value, 0),
-      lowStockCount: products.filter((p) => p.current_stock <= p.min_stock)
-        .length,
+      totalProducts: data?.total_products || 0,
+      totalStock: data?.total_stock || 0,
+      totalValue: data?.total_value || 0,
+      lowStockCount: data?.low_stock_count || 0,
     }
   }
 }

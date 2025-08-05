@@ -44,11 +44,11 @@ export interface TransactionDetail {
   created_at: string
 }
 
-// Transaction item (for transaction_items relation)
+// Transaction item (for transaction_details relation)
 export interface TransactionItem {
   product_name: string
   quantity: number
-  price: number
+  product_price: number
 }
 
 // Daily reports table
