@@ -154,10 +154,11 @@ export class ReportsAPI {
       .from('transactions')
       .select('*, transaction_items(*)')
       .gte('created_at', startDate)
-      .lte('created_at', today + 'T23:59:59')
+      .lte('created_at', new Date(today + 'T23:59:59.999Z').toISOString())
 
     if (transactionsError) {
       console.error('Error fetching weekly transactions:', transactionsError)
+      return { weeklyData: [], weeklyProductTrend: [] }
     }
 
     // Group data by weeks
@@ -185,8 +186,9 @@ export class ReportsAPI {
       const weekTransactions =
         transactions?.filter(
           (transaction) =>
-            transaction.created_at >= weekStartStr &&
-            transaction.created_at <= weekEndStr + 'T23:59:59',
+            new Date(transaction.created_at) >= new Date(weekStartStr) &&
+            new Date(transaction.created_at) <=
+              new Date(weekEndStr + 'T23:59:59.999Z'),
         ) || []
 
       const totalValue = weekReports.reduce(
@@ -229,7 +231,6 @@ export class ReportsAPI {
         })
       })
     }
-
     const weeklyProductTrend = Object.entries(weeklyProductData)
       .map(([name, data]) => ({
         name,
@@ -238,6 +239,11 @@ export class ReportsAPI {
         week3: data.week3 || 0,
         week4: data.week4 || 0,
       }))
+      .sort((a, b) => {
+        const totalA = a.week1 + a.week2 + a.week3 + a.week4
+        const totalB = b.week1 + b.week2 + b.week3 + b.week4
+        return totalB - totalA
+      })
       .slice(0, 10) // Top 10 products
 
     return { weeklyData, weeklyProductTrend }
@@ -269,9 +275,9 @@ export class ReportsAPI {
       .select('*, transaction_items(*)')
       .gte('created_at', startDate)
       .lte('created_at', today + 'T23:59:59')
-
     if (transactionsError) {
       console.error('Error fetching monthly transactions:', transactionsError)
+      return { monthlyData: [], monthlyTrend: [], topProducts: [] }
     }
 
     // Group data by months
@@ -304,8 +310,9 @@ export class ReportsAPI {
       const monthTransactions =
         transactions?.filter(
           (transaction) =>
-            transaction.created_at >= monthStartStr &&
-            transaction.created_at <= monthEndStr + 'T23:59:59',
+            new Date(transaction.created_at) >= new Date(monthStartStr) &&
+            new Date(transaction.created_at) <=
+              new Date(monthEndStr + 'T23:59:59.999Z'),
         ) || []
 
       const totalValue = monthReports.reduce(
@@ -343,6 +350,7 @@ export class ReportsAPI {
       monthlyTrend.push({
         month: monthName,
         revenue,
+        // TODO: Fetch actual profit margin from configuration or calculate based on costs
         profit: revenue * 0.3, // Assuming 30% profit margin
       })
 

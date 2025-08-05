@@ -115,10 +115,14 @@ export default function Reports() {
 
   const handleTabChange = async (tab: string) => {
     setActiveTab(tab)
-    if (tab === 'mingguan' && !weeklyReports) {
-      await fetchWeeklyReports()
-    } else if (tab === 'bulanan' && !monthlyReports) {
-      await fetchMonthlyReports()
+    try {
+      if (tab === 'mingguan' && !weeklyReports) {
+        await fetchWeeklyReports()
+      } else if (tab === 'bulanan' && !monthlyReports) {
+        await fetchMonthlyReports()
+      }
+    } catch (error) {
+      console.error(`Failed to fetch ${tab} reports:`, error)
     }
   }
 
