@@ -44,6 +44,13 @@ export interface TransactionDetail {
   created_at: string
 }
 
+// Transaction item (for transaction_items relation)
+export interface TransactionItem {
+  product_name: string
+  quantity: number
+  price: number
+}
+
 // Daily reports table
 export interface DailyReport {
   id: number
@@ -53,6 +60,43 @@ export interface DailyReport {
   total_value: number
   low_stock_items: number
   created_at: string
+}
+
+// Weekly reports data
+export interface WeeklyReportData {
+  weeklyData: Array<{
+    week: string
+    totalSales: number
+    totalValue: number
+    transactionCount: number
+  }>
+  weeklyProductTrend: Array<{
+    name: string
+    week1: number
+    week2: number
+    week3: number
+    week4: number
+  }>
+}
+
+// Monthly reports data
+export interface MonthlyReportData {
+  monthlyData: Array<{
+    month: string
+    totalSales: number
+    totalValue: number
+    transactionCount: number
+  }>
+  monthlyTrend: Array<{
+    month: string
+    revenue: number
+    profit: number
+  }>
+  topProducts: Array<{
+    name: string
+    totalSold: number
+    revenue: number
+  }>
 }
 
 // Insert/Update types

@@ -51,6 +51,7 @@ const chartConfig = {
 export default function Reports() {
   useMediaQuery('(max-width: 768px)')
   const [isInitialLoading, setIsInitialLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState('harian')
   const [analyticsData, setAnalyticsData] = useState<{
     stockTrend: Array<{ date: string; stock: number; value: number }>
     productDistribution: Array<{ name: string; stock: number; value: number }>
@@ -76,7 +77,12 @@ export default function Reports() {
     clearError: clearTransactionsError,
   } = useTransactionStore()
   const {
+    dailyReports,
+    weeklyReports,
+    monthlyReports,
     fetchReports,
+    fetchWeeklyReports,
+    fetchMonthlyReports,
     isLoading: reportsLoading,
     error: reportsError,
     clearError: clearReportsError,
@@ -106,6 +112,15 @@ export default function Reports() {
 
     initializeData()
   }, [fetchProducts, fetchTransactions, fetchReports])
+
+  const handleTabChange = async (tab: string) => {
+    setActiveTab(tab)
+    if (tab === 'mingguan' && !weeklyReports) {
+      await fetchWeeklyReports()
+    } else if (tab === 'bulanan' && !monthlyReports) {
+      await fetchMonthlyReports()
+    }
+  }
 
   const handleRefresh = async () => {
     clearProductsError()
@@ -225,7 +240,11 @@ export default function Reports() {
         </div>
       </div>
 
-      <Tabs defaultValue='harian' className='space-y-6'>
+      <Tabs
+        defaultValue='harian'
+        className='space-y-6'
+        onValueChange={handleTabChange}
+      >
         <TabsList className='rounded-full border border-pink-200/50 bg-white/80 p-1 backdrop-blur-sm'>
           <TabsTrigger
             value='harian'
@@ -484,32 +503,352 @@ export default function Reports() {
           </Card>
         </TabsContent>
 
-        <TabsContent value='mingguan'>
-          <Card className='cotton-candy-card rounded-2xl border-0 shadow-lg'>
-            <CardContent className='p-12 text-center'>
-              <Calendar className='mx-auto mb-4 size-16 text-gray-300' />
-              <h3 className='mb-2 text-xl font-semibold text-gray-600'>
-                Laporan Mingguan
-              </h3>
-              <p className='text-gray-500'>
-                Data laporan mingguan akan segera tersedia
-              </p>
-            </CardContent>
-          </Card>
+        <TabsContent value='mingguan' className='space-y-6'>
+          {weeklyReports ? (
+            <>
+              {/* Weekly Summary Cards */}
+              <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3'>
+                <Card className='cotton-candy-card rounded-2xl border-0 transition-all duration-300 hover:shadow-xl'>
+                  <CardContent className='p-4 text-center'>
+                    <TrendingUp className='mx-auto mb-2 size-8 text-green-500' />
+                    <div className='text-2xl font-bold text-green-500'>
+                      {weeklyReports.weeklyData.reduce(
+                        (sum, week) => sum + week.totalSales,
+                        0,
+                      )}
+                    </div>
+                    <div className='text-sm text-gray-600'>
+                      Total Penjualan (4 Minggu)
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className='cotton-candy-card rounded-2xl border-0 transition-all duration-300 hover:shadow-xl'>
+                  <CardContent className='p-4 text-center'>
+                    <BarChart3 className='mx-auto mb-2 size-8 text-purple-500' />
+                    <div className='text-2xl font-bold text-purple-500'>
+                      {weeklyReports.weeklyData.reduce(
+                        (sum, week) => sum + week.transactionCount,
+                        0,
+                      )}
+                    </div>
+                    <div className='text-sm text-gray-600'>Total Transaksi</div>
+                  </CardContent>
+                </Card>
+
+                <Card className='cotton-candy-card rounded-2xl border-0 transition-all duration-300 hover:shadow-xl'>
+                  <CardContent className='p-4 text-center'>
+                    <PieChartIcon className='mx-auto mb-2 size-8 text-pink-500' />
+                    <div className='text-lg font-bold text-pink-500'>
+                      {formatCurrency(
+                        weeklyReports.weeklyData.reduce(
+                          (sum, week) => sum + week.totalValue,
+                          0,
+                        ),
+                      )}
+                    </div>
+                    <div className='text-sm text-gray-600'>
+                      Total Nilai Inventaris
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Weekly Chart */}
+              <Card className='cotton-candy-card rounded-2xl border-0 shadow-lg'>
+                <CardHeader>
+                  <CardTitle className='flex items-center gap-2 text-lg'>
+                    <BarChart3 className='size-5 text-pink-500' />
+                    Tren Penjualan Mingguan (4 Minggu Terakhir)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ChartContainer config={chartConfig} className='h-[300px]'>
+                    <BarChart data={weeklyReports.weeklyData}>
+                      <CartesianGrid strokeDasharray='3 3' />
+                      <XAxis dataKey='week' tick={{ fontSize: 12 }} />
+                      <YAxis tick={{ fontSize: 12 }} />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Bar
+                        dataKey='totalSales'
+                        fill='var(--color-stock)'
+                        radius={[4, 4, 0, 0]}
+                      />
+                    </BarChart>
+                  </ChartContainer>
+                </CardContent>
+              </Card>
+
+              {/* Weekly Product Trend */}
+              {weeklyReports.weeklyProductTrend.length > 0 && (
+                <Card className='cotton-candy-card rounded-2xl border-0 shadow-lg'>
+                  <CardHeader>
+                    <CardTitle className='flex items-center gap-2 text-lg'>
+                      <TrendingUp className='size-5 text-purple-500' />
+                      Tren Produk Mingguan
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className='space-y-4'>
+                      {weeklyReports.weeklyProductTrend.map(
+                        (product, index) => (
+                          <div
+                            key={index}
+                            className='rounded-lg border border-gray-200 p-4'
+                          >
+                            <h4 className='mb-3 font-semibold text-gray-700'>
+                              {product.name}
+                            </h4>
+                            <div className='grid grid-cols-4 gap-4 text-center'>
+                              <div>
+                                <div className='text-sm text-gray-500'>
+                                  Minggu 1
+                                </div>
+                                <div className='text-lg font-bold text-pink-500'>
+                                  {product.week1}
+                                </div>
+                              </div>
+                              <div>
+                                <div className='text-sm text-gray-500'>
+                                  Minggu 2
+                                </div>
+                                <div className='text-lg font-bold text-purple-500'>
+                                  {product.week2}
+                                </div>
+                              </div>
+                              <div>
+                                <div className='text-sm text-gray-500'>
+                                  Minggu 3
+                                </div>
+                                <div className='text-lg font-bold text-indigo-500'>
+                                  {product.week3}
+                                </div>
+                              </div>
+                              <div>
+                                <div className='text-sm text-gray-500'>
+                                  Minggu 4
+                                </div>
+                                <div className='text-lg font-bold text-green-500'>
+                                  {product.week4}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ),
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </>
+          ) : (
+            <div className='flex items-center justify-center p-12'>
+              <div className='text-center'>
+                <RefreshCw className='mx-auto mb-4 size-12 animate-spin text-pink-400' />
+                <p className='text-gray-600'>Memuat data laporan mingguan...</p>
+              </div>
+            </div>
+          )}
         </TabsContent>
 
-        <TabsContent value='bulanan'>
-          <Card className='cotton-candy-card rounded-2xl border-0 shadow-lg'>
-            <CardContent className='p-12 text-center'>
-              <Calendar className='mx-auto mb-4 size-16 text-gray-300' />
-              <h3 className='mb-2 text-xl font-semibold text-gray-600'>
-                Laporan Bulanan
-              </h3>
-              <p className='text-gray-500'>
-                Data laporan bulanan akan segera tersedia
-              </p>
-            </CardContent>
-          </Card>
+        <TabsContent value='bulanan' className='space-y-6'>
+          {monthlyReports ? (
+            <>
+              {/* Monthly Summary Cards */}
+              <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4'>
+                <Card className='cotton-candy-card rounded-2xl border-0 transition-all duration-300 hover:shadow-xl'>
+                  <CardContent className='p-4 text-center'>
+                    <TrendingUp className='mx-auto mb-2 size-8 text-green-500' />
+                    <div className='text-2xl font-bold text-green-500'>
+                      {monthlyReports.monthlyData.reduce(
+                        (sum, month) => sum + month.totalSales,
+                        0,
+                      )}
+                    </div>
+                    <div className='text-sm text-gray-600'>
+                      Total Penjualan (6 Bulan)
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className='cotton-candy-card rounded-2xl border-0 transition-all duration-300 hover:shadow-xl'>
+                  <CardContent className='p-4 text-center'>
+                    <BarChart3 className='mx-auto mb-2 size-8 text-purple-500' />
+                    <div className='text-2xl font-bold text-purple-500'>
+                      {monthlyReports.monthlyData.reduce(
+                        (sum, month) => sum + month.transactionCount,
+                        0,
+                      )}
+                    </div>
+                    <div className='text-sm text-gray-600'>Total Transaksi</div>
+                  </CardContent>
+                </Card>
+
+                <Card className='cotton-candy-card rounded-2xl border-0 transition-all duration-300 hover:shadow-xl'>
+                  <CardContent className='p-4 text-center'>
+                    <PieChartIcon className='mx-auto mb-2 size-8 text-pink-500' />
+                    <div className='text-lg font-bold text-pink-500'>
+                      {formatCurrency(
+                        monthlyReports.monthlyTrend.reduce(
+                          (sum, month) => sum + month.revenue,
+                          0,
+                        ),
+                      )}
+                    </div>
+                    <div className='text-sm text-gray-600'>
+                      Total Pendapatan
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className='cotton-candy-card rounded-2xl border-0 transition-all duration-300 hover:shadow-xl'>
+                  <CardContent className='p-4 text-center'>
+                    <TrendingUp className='mx-auto mb-2 size-8 text-indigo-500' />
+                    <div className='text-lg font-bold text-indigo-500'>
+                      {formatCurrency(
+                        monthlyReports.monthlyTrend.reduce(
+                          (sum, month) => sum + month.profit,
+                          0,
+                        ),
+                      )}
+                    </div>
+                    <div className='text-sm text-gray-600'>Estimasi Profit</div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Monthly Charts Section */}
+              <div className='grid grid-cols-1 gap-6 lg:grid-cols-2'>
+                {/* Monthly Revenue & Profit Trend */}
+                <Card className='cotton-candy-card rounded-2xl border-0 shadow-lg'>
+                  <CardHeader>
+                    <CardTitle className='flex items-center gap-2 text-lg'>
+                      <BarChart3 className='size-5 text-pink-500' />
+                      Tren Pendapatan & Profit Bulanan
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ChartContainer config={chartConfig} className='h-[300px]'>
+                      <BarChart data={monthlyReports.monthlyTrend}>
+                        <CartesianGrid strokeDasharray='3 3' />
+                        <XAxis
+                          dataKey='month'
+                          tick={{ fontSize: 10 }}
+                          angle={-45}
+                          textAnchor='end'
+                          height={80}
+                        />
+                        <YAxis tick={{ fontSize: 12 }} />
+                        <ChartTooltip
+                          content={<ChartTooltipContent />}
+                          formatter={(value) => [
+                            formatCurrency(Number(value)),
+                            '',
+                          ]}
+                        />
+                        <Bar
+                          dataKey='revenue'
+                          fill='var(--color-stock)'
+                          radius={[4, 4, 0, 0]}
+                          name='Pendapatan'
+                        />
+                        <Bar
+                          dataKey='profit'
+                          fill='var(--color-value)'
+                          radius={[4, 4, 0, 0]}
+                          name='Profit'
+                        />
+                      </BarChart>
+                    </ChartContainer>
+                  </CardContent>
+                </Card>
+
+                {/* Top Products by Revenue */}
+                <Card className='cotton-candy-card rounded-2xl border-0 shadow-lg'>
+                  <CardHeader>
+                    <CardTitle className='flex items-center gap-2 text-lg'>
+                      <TrendingUp className='size-5 text-purple-500' />
+                      Top 10 Produk Terlaris
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className='space-y-3'>
+                      {monthlyReports.topProducts
+                        .slice(0, 10)
+                        .map((product, index) => (
+                          <div
+                            key={index}
+                            className='flex items-center justify-between rounded-lg border border-gray-200 p-3'
+                          >
+                            <div className='flex items-center gap-3'>
+                              <div
+                                className='size-4 shrink-0 rounded-full'
+                                style={{
+                                  backgroundColor:
+                                    COLORS[index % COLORS.length],
+                                }}
+                              />
+                              <div>
+                                <div className='font-medium text-gray-700'>
+                                  {product.name}
+                                </div>
+                                <div className='text-sm text-gray-500'>
+                                  {product.totalSold} terjual
+                                </div>
+                              </div>
+                            </div>
+                            <div className='text-right'>
+                              <div className='font-bold text-green-600'>
+                                {formatCurrency(product.revenue)}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Monthly Sales Chart */}
+              <Card className='cotton-candy-card rounded-2xl border-0 shadow-lg'>
+                <CardHeader>
+                  <CardTitle className='flex items-center gap-2 text-lg'>
+                    <BarChart3 className='size-5 text-indigo-500' />
+                    Tren Penjualan Bulanan (6 Bulan Terakhir)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ChartContainer config={chartConfig} className='h-[300px]'>
+                    <BarChart data={monthlyReports.monthlyData}>
+                      <CartesianGrid strokeDasharray='3 3' />
+                      <XAxis
+                        dataKey='month'
+                        tick={{ fontSize: 10 }}
+                        angle={-45}
+                        textAnchor='end'
+                        height={80}
+                      />
+                      <YAxis tick={{ fontSize: 12 }} />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Bar
+                        dataKey='totalSales'
+                        fill='var(--color-stock)'
+                        radius={[4, 4, 0, 0]}
+                        name='Total Penjualan'
+                      />
+                    </BarChart>
+                  </ChartContainer>
+                </CardContent>
+              </Card>
+            </>
+          ) : (
+            <div className='flex items-center justify-center p-12'>
+              <div className='text-center'>
+                <RefreshCw className='mx-auto mb-4 size-12 animate-spin text-pink-400' />
+                <p className='text-gray-600'>Memuat data laporan bulanan...</p>
+              </div>
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </div>
