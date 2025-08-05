@@ -1,14 +1,14 @@
-import { supabase } from "@/lib/supabase";
+import { supabase } from '@/lib/supabase'
 
 export interface User {
-  user_id: number;
-  username: string;
+  user_id: number
+  username: string
 }
 
 export interface AuthState {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
+  user: User | null
+  isAuthenticated: boolean
+  isLoading: boolean
 }
 
 export class AuthService {
@@ -16,92 +16,93 @@ export class AuthService {
   static async login(username: string, password: string): Promise<User> {
     try {
       if (!username || !password) {
-        throw new Error("Username dan password wajib diisi");
+        throw new Error('Username dan password wajib diisi')
       }
 
       // Call the authentication function with plain password
-      const { data, error } = await supabase.rpc("authenticate_user", {
+      // The database function will hash and compare it securely using bcrypt
+      const { data, error } = await supabase.rpc('authenticate_user', {
         p_username: username.trim().toLowerCase(),
-        p_password: password, // Using plain password for now
-      });
+        p_password: password, // Plain password - hashed by database function
+      })
 
       if (error) {
-        console.error("Authentication error:", error);
-        throw new Error("Gagal melakukan autentikasi");
+        console.error('Authentication error:', error)
+        throw new Error('Gagal melakukan autentikasi')
       }
 
       if (!data || data.length === 0) {
-        throw new Error("Username atau password salah");
+        throw new Error('Username atau password salah')
       }
 
-      const user = data[0];
+      const user = data[0]
 
       // Store user data in localStorage
-      if (typeof window !== "undefined") {
-        localStorage.setItem("auth_user", JSON.stringify(user));
-        localStorage.setItem("auth_token", `${user.username}_${Date.now()}`);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('auth_user', JSON.stringify(user))
+        localStorage.setItem('auth_token', `${user.username}_${Date.now()}`)
       }
 
-      return user;
+      return user
     } catch (error) {
-      console.error("Login error:", error);
-      throw error;
+      console.error('Login error:', error)
+      throw error
     }
   }
 
   // Logout
   static logout(): void {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("auth_user");
-      localStorage.removeItem("auth_token");
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('auth_user')
+      localStorage.removeItem('auth_token')
     }
   }
 
   // Get current user from localStorage
   static getCurrentUser(): User | null {
     try {
-      if (typeof window === "undefined") return null;
+      if (typeof window === 'undefined') return null
 
-      const userStr = localStorage.getItem("auth_user");
-      const token = localStorage.getItem("auth_token");
+      const userStr = localStorage.getItem('auth_user')
+      const token = localStorage.getItem('auth_token')
 
       if (!userStr || !token) {
-        return null;
+        return null
       }
 
-      return JSON.parse(userStr);
+      return JSON.parse(userStr)
     } catch (error) {
-      console.error("Error getting current user:", error);
-      return null;
+      console.error('Error getting current user:', error)
+      return null
     }
   }
 
   // Check if user is authenticated
   static isAuthenticated(): boolean {
-    if (typeof window === "undefined") return false;
+    if (typeof window === 'undefined') return false
 
-    const user = this.getCurrentUser();
-    const token = localStorage.getItem("auth_token");
-    return !!(user && token);
+    const user = this.getCurrentUser()
+    const token = localStorage.getItem('auth_token')
+    return !!(user && token)
   }
 
   // Get all users (admin only)
   static async getAllUsers(): Promise<User[]> {
     try {
       const { data, error } = await supabase
-        .from("users")
-        .select("user_id:id, username")
-        .order("created_at", { ascending: false });
+        .from('users')
+        .select('user_id:id, username')
+        .order('created_at', { ascending: false })
 
       if (error) {
-        console.error("Get users error:", error);
-        throw new Error("Gagal mengambil data pengguna");
+        console.error('Get users error:', error)
+        throw new Error('Gagal mengambil data pengguna')
       }
 
-      return data || [];
+      return data || []
     } catch (error) {
-      console.error("Get all users error:", error);
-      throw error;
+      console.error('Get all users error:', error)
+      throw error
     }
   }
 }
