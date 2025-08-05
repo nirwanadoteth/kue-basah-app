@@ -295,8 +295,9 @@ BEGIN
   RETURN QUERY
   WITH week_series AS (
     SELECT
-      generate_series(0, p_weeks_back - 1) as week_num,
-      (CURRENT_DATE - INTERVAL '1 week' * generate_series(p_weeks_back - 1, 0, -1))::DATE as week_start_date
+      s.week_num,
+      (CURRENT_DATE - INTERVAL '1 week' * (p_weeks_back - 1 - s.week_num))::DATE as week_start_date
+    FROM generate_series(0, p_weeks_back - 1) AS s(week_num)
   ),
   weekly_reports AS (
     SELECT
@@ -346,8 +347,9 @@ BEGIN
   RETURN QUERY
   WITH week_series AS (
     SELECT
-      generate_series(0, p_weeks_back - 1) as week_num,
-      (CURRENT_DATE - INTERVAL '1 week' * generate_series(p_weeks_back - 1, 0, -1))::DATE as week_start_date
+      s.week_num,
+      (CURRENT_DATE - INTERVAL '1 week' * (p_weeks_back - 1 - s.week_num))::DATE as week_start_date
+    FROM generate_series(0, p_weeks_back - 1) AS s(week_num)
   )
   SELECT
     td.product_name,
@@ -382,8 +384,9 @@ BEGIN
   RETURN QUERY
   WITH month_series AS (
     SELECT
-      generate_series(0, p_months_back - 1) as month_num,
-      date_trunc('month', CURRENT_DATE - INTERVAL '1 month' * generate_series(p_months_back - 1, 0, -1))::DATE as month_start_date
+      s.month_num,
+      date_trunc('month', CURRENT_DATE - INTERVAL '1 month' * (p_months_back - 1 - s.month_num))::DATE as month_start_date
+    FROM generate_series(0, p_months_back - 1) AS s(month_num)
   ),
   monthly_reports AS (
     SELECT
