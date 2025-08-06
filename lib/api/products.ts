@@ -1,9 +1,10 @@
 import {
-  supabase,
   type Product,
   type ProductInsert,
   type ProductUpdate,
 } from '@/lib/supabase'
+
+import Supabase from '@/lib/supabase'
 
 // Helper function to handle Supabase errors
 function handleSupabaseError(error: Error, message: string): never {
@@ -18,7 +19,7 @@ function handleSupabaseError(error: Error, message: string): never {
 
 export class ProductsAPI {
   static async getAll(): Promise<Product[]> {
-    const { data, error } = await supabase
+    const { data, error } = await Supabase()
       .from('products')
       .select('*')
       .order('name', { ascending: true })
@@ -28,7 +29,7 @@ export class ProductsAPI {
   }
 
   static async getById(id: number): Promise<Product | null> {
-    const { data, error } = await supabase
+    const { data, error } = await Supabase()
       .from('products')
       .select('*')
       .eq('id', id)
@@ -44,7 +45,7 @@ export class ProductsAPI {
   }
 
   static async create(product: ProductInsert): Promise<Product> {
-    const { data, error } = await supabase
+    const { data, error } = await Supabase()
       .from('products')
       .insert([product])
       .select()
@@ -55,7 +56,7 @@ export class ProductsAPI {
   }
 
   static async update(id: number, updates: ProductUpdate): Promise<Product> {
-    const { data, error } = await supabase
+    const { data, error } = await Supabase()
       .from('products')
       .update(updates)
       .eq('id', id)
@@ -67,13 +68,13 @@ export class ProductsAPI {
   }
 
   static async delete(id: number): Promise<void> {
-    const { error } = await supabase.from('products').delete().eq('id', id)
+    const { error } = await Supabase().from('products').delete().eq('id', id)
 
     if (error) handleSupabaseError(error, 'Failed to delete product')
   }
 
   static async getLowStock(): Promise<Product[]> {
-    const { data, error } = await supabase
+    const { data, error } = await Supabase()
       .from('products')
       .select('*')
       .filter('current_stock', 'lte', 'min_stock')
@@ -106,7 +107,7 @@ export class ProductsAPI {
       return []
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await Supabase()
       .from('products')
       .select('*')
       .ilike('name', `%${query}%`)
@@ -123,7 +124,7 @@ export class ProductsAPI {
     lowStockCount: number
   }> {
     // Use the RPC function for complex aggregations
-    const { data, error } = await supabase.rpc('get_product_stats')
+    const { data, error } = await Supabase().rpc('get_product_stats')
 
     if (error) {
       console.warn(
@@ -131,7 +132,7 @@ export class ProductsAPI {
       )
 
       // Fallback to client-side calculation if RPC function doesn't exist
-      const { data: products, error: productsError } = await supabase
+      const { data: products, error: productsError } = await Supabase()
         .from('products')
         .select('current_stock, total_value, min_stock')
 

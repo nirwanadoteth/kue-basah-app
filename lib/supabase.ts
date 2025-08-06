@@ -19,7 +19,7 @@ import type {
   DailyReportUpdate,
   TransactionDetailWithProduct,
 } from './types'
-import { auth } from '@clerk/nextjs/server'
+import { useSession } from '@clerk/nextjs'
 
 export type {
   Product,
@@ -54,15 +54,29 @@ if (!supabaseUrl || !supabaseAnonKey) {
   )
 }
 
-export const supabase = createClient(
-  supabaseUrl || 'https://placeholder.supabase.co',
-  supabaseAnonKey || 'placeholder-key',
-  {
-    async accessToken() {
-      return (await auth()).getToken()
-    },
-  },
-)
+export default function Supabase() {
+  // The `useSession()` hook is used to get the Clerk session object
+  // The session object is used to get the Clerk session token
+  const { session } = useSession()
+
+  // Create a custom Supabase client that injects the Clerk session token into the request headers
+  function createClerkSupabaseClient() {
+    return createClient(
+      supabaseUrl || 'https://placeholder.supabase.co',
+      supabaseAnonKey || 'placeholder-key',
+      {
+        async accessToken() {
+          return session?.getToken() ?? null
+        },
+      },
+    )
+  }
+
+  // Create a `supabase` object for accessing Supabase data using the Clerk token
+  const supabase = createClerkSupabaseClient()
+
+  return supabase
+}
 
 function isErrorWithMessage(error: unknown): error is { message: string } {
   return (
@@ -87,7 +101,7 @@ export const testSupabaseConnection = async () => {
 
   try {
     // Attempt a simple query to check connection and table existence
-    const { error }: { error: PostgrestError | null } = await supabase
+    const { error }: { error: PostgrestError | null } = await Supabase()
       .from('products')
       .select('id', { head: true, count: 'exact' })
 
@@ -123,7 +137,7 @@ export const checkTablesExist = async () => {
 
   for (const table of tables) {
     try {
-      const { error }: { error: PostgrestError | null } = await supabase
+      const { error }: { error: PostgrestError | null } = await Supabase()
         .from(table)
         .select('count', { count: 'exact', head: true })
 
