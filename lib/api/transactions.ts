@@ -6,7 +6,7 @@ import {
   type TransactionWithDetails,
 } from '@/lib/supabase'
 
-import Supabase from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 
 // Helper function to handle Supabase errors
 function handleSupabaseError(error: Error, message: string): never {
@@ -21,7 +21,7 @@ function handleSupabaseError(error: Error, message: string): never {
 
 export class TransactionsAPI {
   static async getAll(): Promise<TransactionWithDetails[]> {
-    const { data: transactions, error: transactionsError } = await Supabase()
+    const { data: transactions, error: transactionsError } = await supabase
       .from('transactions')
       .select(
         `
@@ -43,7 +43,7 @@ export class TransactionsAPI {
   }
 
   static async getById(id: number): Promise<TransactionWithDetails | null> {
-    const { data: transaction, error: transactionError } = await Supabase()
+    const { data: transaction, error: transactionError } = await supabase
       .from('transactions')
       .select(
         `
@@ -70,7 +70,7 @@ export class TransactionsAPI {
   }
 
   static async create(transaction: TransactionInsert): Promise<Transaction> {
-    const { data, error } = await Supabase()
+    const { data, error } = await supabase
       .from('transactions')
       .insert([transaction])
       .select()
@@ -84,7 +84,7 @@ export class TransactionsAPI {
     id: number,
     updates: TransactionUpdate,
   ): Promise<Transaction> {
-    const { data, error } = await Supabase()
+    const { data, error } = await supabase
       .from('transactions')
       .update(updates)
       .eq('id', id)
@@ -96,10 +96,7 @@ export class TransactionsAPI {
   }
 
   static async delete(id: number): Promise<void> {
-    const { error } = await Supabase()
-      .from('transactions')
-      .delete()
-      .eq('id', id)
+    const { error } = await supabase.from('transactions').delete().eq('id', id)
 
     if (error) handleSupabaseError(error, 'Failed to delete transaction')
   }
@@ -109,7 +106,7 @@ export class TransactionsAPI {
     productId: number,
     quantity: number,
   ): Promise<TransactionDetail> {
-    const { data, error } = await Supabase().rpc('add_transaction_item', {
+    const { data, error } = await supabase.rpc('add_transaction_item', {
       p_transaction_id: transactionId,
       p_product_id: productId,
       p_quantity: quantity,
@@ -125,7 +122,7 @@ export class TransactionsAPI {
   }
 
   static async removeItem(detailId: number): Promise<void> {
-    const { data: detail, error: getError } = await Supabase()
+    const { data: detail, error: getError } = await supabase
       .from('transaction_details')
       .select('transaction_id')
       .eq('id', detailId)
@@ -134,7 +131,7 @@ export class TransactionsAPI {
     if (getError)
       handleSupabaseError(getError, 'Failed to get transaction detail')
 
-    const { error: deleteError } = await Supabase()
+    const { error: deleteError } = await supabase
       .from('transaction_details')
       .delete()
       .eq('id', detailId)
@@ -142,7 +139,7 @@ export class TransactionsAPI {
     if (deleteError)
       handleSupabaseError(deleteError, 'Failed to remove item from transaction')
 
-    await Supabase().rpc('update_transaction_total', {
+    await supabase.rpc('update_transaction_total', {
       p_transaction_id: detail.transaction_id,
     })
   }
@@ -156,7 +153,7 @@ export class TransactionsAPI {
       throw new Error('Quantity set to 0, item removed.')
     }
 
-    const { data: detail, error: getError } = await Supabase()
+    const { data: detail, error: getError } = await supabase
       .from('transaction_details')
       .select('transaction_id')
       .eq('id', detailId)
@@ -165,7 +162,7 @@ export class TransactionsAPI {
     if (getError)
       handleSupabaseError(getError, 'Failed to get transaction detail')
 
-    const { data, error } = await Supabase()
+    const { data, error } = await supabase
       .from('transaction_details')
       .update({ quantity })
       .eq('id', detailId)
@@ -174,7 +171,7 @@ export class TransactionsAPI {
 
     if (error) handleSupabaseError(error, 'Failed to update transaction item')
 
-    await Supabase().rpc('update_transaction_total', {
+    await supabase.rpc('update_transaction_total', {
       p_transaction_id: detail.transaction_id,
     })
 
@@ -182,7 +179,7 @@ export class TransactionsAPI {
   }
 
   static async complete(id: number): Promise<boolean> {
-    const { data, error } = await Supabase().rpc('complete_transaction', {
+    const { data, error } = await supabase.rpc('complete_transaction', {
       p_transaction_id: id,
     })
 
@@ -199,13 +196,13 @@ export class TransactionsAPI {
   }> {
     const today = new Date().toISOString().split('T')[0]
 
-    const { data: all, error: allError } = await Supabase()
+    const { data: all, error: allError } = await supabase
       .from('transactions')
       .select('total_price')
     if (allError)
       handleSupabaseError(allError, 'Failed to fetch all transactions')
 
-    const { data: todayData, error: todayError } = await Supabase()
+    const { data: todayData, error: todayError } = await supabase
       .from('transactions')
       .select('total_price')
       .gte('created_at', `${today}T00:00:00Z`)
@@ -235,7 +232,7 @@ export class TransactionsAPI {
     startDate: string,
     endDate: string,
   ): Promise<TransactionWithDetails[]> {
-    const { data: transactions, error } = await Supabase()
+    const { data: transactions, error } = await supabase
       .from('transactions')
       .select(
         `

@@ -54,31 +54,21 @@ if (!supabaseUrl || !supabaseAnonKey) {
   )
 }
 
-export default function Supabase() {
-  // The `useSession()` hook is used to get the Clerk session object
-  // The session object is used to get the Clerk session token
+export function Supabase() {
   const { session } = useSession()
 
-  // Create a custom Supabase client that injects the Clerk session token into the request headers
-  function createClerkSupabaseClient() {
-    return createClient(
-      supabaseUrl || 'https://placeholder.supabase.co',
-      supabaseAnonKey || 'placeholder-key',
-      {
-        async accessToken() {
-          return session?.getToken() ?? null
-        },
-      },
-    )
-  }
-
-  // Create a `supabase` object for accessing Supabase data using the Clerk token
-  const supabase = createClerkSupabaseClient()
-
-  return supabase
+  return createClient(supabaseUrl!, supabaseAnonKey!, {
+    async accessToken() {
+      return session?.getToken() || null
+    },
+  })
 }
 
-function isErrorWithMessage(error: unknown): error is { message: string } {
+export const supabase = Supabase()
+
+export function isErrorWithMessage(
+  error: unknown,
+): error is { message: string } {
   return (
     typeof error === 'object' &&
     error !== null &&
@@ -101,7 +91,7 @@ export const testSupabaseConnection = async () => {
 
   try {
     // Attempt a simple query to check connection and table existence
-    const { error }: { error: PostgrestError | null } = await Supabase()
+    const { error }: { error: PostgrestError | null } = await supabase
       .from('products')
       .select('id', { head: true, count: 'exact' })
 
@@ -137,7 +127,7 @@ export const checkTablesExist = async () => {
 
   for (const table of tables) {
     try {
-      const { error }: { error: PostgrestError | null } = await Supabase()
+      const { error }: { error: PostgrestError | null } = await supabase
         .from(table)
         .select('count', { count: 'exact', head: true })
 
