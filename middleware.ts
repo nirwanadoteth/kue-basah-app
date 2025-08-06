@@ -1,8 +1,12 @@
-import { updateSession } from '@/lib/supabase/middleware'
-import { type NextRequest } from 'next/server'
+// Temporarily disabled to fix navigation issues with custom auth
+// The Supabase middleware conflicts with the custom localStorage-based auth system
 
-export async function middleware(request: NextRequest) {
-  return await updateSession(request)
+import { NextResponse } from 'next/server'
+
+export async function middleware() {
+  // For now, just pass through all requests
+  // TODO: Implement proper middleware that works with custom auth or migrate to Supabase auth
+  return NextResponse.next()
 }
 
 export const config = {

@@ -16,13 +16,28 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const router = useRouter()
   const pathname = usePathname()
 
+  // Define public routes that don't require authentication
+  const publicRoutes = ['/login']
+  const isPublicRoute = publicRoutes.includes(pathname)
+
   useEffect(() => {
-    if (!isLoading && !isAuthenticated && pathname !== '/login') {
+    // Only redirect if:
+    // 1. Not loading
+    // 2. Not authenticated
+    // 3. Not already on a public route
+    if (!isLoading && !isAuthenticated && !isPublicRoute) {
+      console.log('AuthGuard: Redirecting to login from', pathname)
       router.push('/login')
     }
-  }, [isAuthenticated, isLoading, router, pathname])
+  }, [isAuthenticated, isLoading, router, pathname, isPublicRoute])
 
-  if (isLoading || (!isAuthenticated && pathname !== '/login')) {
+  // Show loading while checking auth or while redirecting
+  if (isLoading) {
+    return <LoadingFallback />
+  }
+
+  // Show loading if user is not authenticated and not on public route (redirecting)
+  if (!isAuthenticated && !isPublicRoute) {
     return <LoadingFallback />
   }
 
