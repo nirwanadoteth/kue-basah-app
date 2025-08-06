@@ -1,4 +1,4 @@
-import Supabase from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/server'
 import type { WeeklyReportData } from '@/lib/types'
 
 interface WeeklyRpcData {
@@ -20,10 +20,11 @@ interface WeeklyProductData {
 export class WeeklyReportsAPI {
   static async getWeeklyReports(): Promise<WeeklyReportData> {
     try {
+      const supabase = await createClient()
       // Try to use optimized database functions first
       const [weeklyDataResult, weeklyTrendsResult] = await Promise.allSettled([
-        Supabase().rpc('get_weekly_report_data', { p_weeks_back: 4 }),
-        Supabase().rpc('get_weekly_product_trends', { p_weeks_back: 4 }),
+        supabase.rpc('get_weekly_report_data', { p_weeks_back: 4 }),
+        supabase.rpc('get_weekly_product_trends', { p_weeks_back: 4 }),
       ])
 
       let weeklyData: WeeklyReportData['weeklyData'] = []
@@ -77,6 +78,7 @@ export class WeeklyReportsAPI {
   }
 
   private static async getFallbackWeeklyReports(): Promise<WeeklyReportData> {
+    const supabase = await createClient()
     const fourWeeksAgo = new Date()
     fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28)
     const startDate = fourWeeksAgo.toISOString().split('T')[0]
@@ -84,14 +86,14 @@ export class WeeklyReportsAPI {
 
     // Use LIMIT for pagination - fetch only what we need for performance
     const [reportsResult, transactionsResult] = await Promise.allSettled([
-      Supabase()
+      supabase
         .from('daily_reports')
         .select('report_date, total_value, total_stock')
         .gte('report_date', startDate)
         .lte('report_date', today)
         .order('report_date', { ascending: true })
         .limit(30), // Pagination to prevent large data transfer
-      Supabase()
+      supabase
         .from('transactions')
         .select(
           `

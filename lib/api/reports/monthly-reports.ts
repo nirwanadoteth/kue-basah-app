@@ -1,4 +1,4 @@
-import Supabase from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/server'
 import type { MonthlyReportData } from '@/lib/types'
 
 interface MonthlyRpcData {
@@ -18,8 +18,9 @@ interface ProductSalesData {
 export class MonthlyReportsAPI {
   static async getMonthlyReports(): Promise<MonthlyReportData> {
     try {
+      const supabase = await createClient()
       // Try to use optimized database function first for maximum performance
-      const { data, error } = await Supabase().rpc('get_monthly_report_data', {
+      const { data, error } = await supabase.rpc('get_monthly_report_data', {
         p_months_back: 6,
       })
 
@@ -59,11 +60,12 @@ export class MonthlyReportsAPI {
 
   private static async getTopProducts() {
     try {
+      const supabase = await createClient()
       const sixMonthsAgo = new Date()
       sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
 
       // Optimized query with pagination for performance
-      const { data: topProductsData } = await Supabase()
+      const { data: topProductsData } = await supabase
         .from('transaction_details')
         .select('product_name, quantity, product_price')
         .gte('created_at', sixMonthsAgo.toISOString())
@@ -92,6 +94,7 @@ export class MonthlyReportsAPI {
   }
 
   private static async getFallbackMonthlyReports(): Promise<MonthlyReportData> {
+    const supabase = await createClient()
     const sixMonthsAgo = new Date()
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
     const startDate = sixMonthsAgo.toISOString().split('T')[0]
@@ -99,14 +102,14 @@ export class MonthlyReportsAPI {
 
     // Optimized queries with pagination for large datasets
     const [reportsResult, transactionsResult] = await Promise.allSettled([
-      Supabase()
+      supabase
         .from('daily_reports')
         .select('report_date, total_value, total_stock')
         .gte('report_date', startDate)
         .lte('report_date', today)
         .order('report_date', { ascending: true })
         .limit(200), // Pagination for performance
-      Supabase()
+      supabase
         .from('transactions')
         .select(
           `

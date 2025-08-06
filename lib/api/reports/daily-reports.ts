@@ -1,4 +1,4 @@
-import Supabase from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/server'
 import type { DailyReport } from '@/lib/types'
 
 // Helper function to handle Supabase errors
@@ -16,7 +16,8 @@ function handleSupabaseError(error: Error, message: string): never {
 
 export class DailyReportsAPI {
   static async getAll(limit = 30): Promise<DailyReport[]> {
-    const { data, error } = await Supabase()
+    const supabase = await createClient()
+    const { data, error } = await supabase
       .from('daily_reports')
       .select('*')
       .order('report_date', { ascending: false })
@@ -27,7 +28,8 @@ export class DailyReportsAPI {
   }
 
   static async getByDate(date: string): Promise<DailyReport | null> {
-    const { data, error } = await Supabase()
+    const supabase = await createClient()
+    const { data, error } = await supabase
       .from('daily_reports')
       .select('*')
       .eq('report_date', date)
@@ -46,7 +48,8 @@ export class DailyReportsAPI {
     startDate: string,
     endDate: string,
   ): Promise<DailyReport[]> {
-    const { data, error } = await Supabase()
+    const supabase = await createClient()
+    const { data, error } = await supabase
       .from('daily_reports')
       .select('*')
       .gte('report_date', startDate)
@@ -62,13 +65,14 @@ export class DailyReportsAPI {
     stockTrend: Array<{ date: string; stock: number; value: number }>
     productDistribution: Array<{ name: string; stock: number; value: number }>
   }> {
+    const supabase = await createClient()
     const [stockResult, productResult] = await Promise.allSettled([
-      Supabase()
+      supabase
         .from('daily_reports')
         .select('report_date, total_stock, total_value')
         .order('report_date', { ascending: true })
         .limit(30), // Pagination for performance
-      Supabase()
+      supabase
         .from('products')
         .select('name, current_stock, total_value')
         .order('current_stock', { ascending: false })
@@ -125,7 +129,8 @@ export class DailyReportsAPI {
   }
 
   static async generateCurrentReport(): Promise<DailyReport | null> {
-    const { error } = await Supabase().rpc('update_daily_report')
+    const supabase = await createClient()
+    const { error } = await supabase.rpc('update_daily_report')
 
     if (error) {
       console.warn('Stored function update_daily_report not available:', error)

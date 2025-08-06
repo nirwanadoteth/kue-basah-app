@@ -41,6 +41,14 @@ export default function RootLayout({
           </SignedIn>
         </header>
         <body className={inter.className}>
+          <header>
+            <SignedOut>
+              <SignInButton />
+            </SignedOut>
+            <SignedIn>
+              <UserButton />
+            </SignedIn>
+          </header>
           <ErrorBoundary>
             <div className='min-h-screen'>
               <Navbar />

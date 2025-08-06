@@ -398,7 +398,7 @@ export default function Dashboard() {
                       console.error('Error rendering product row:', error)
                       return (
                         <tr
-                          key={item.id || Math.random()}
+                          key={item.id || `error-row-${item.id}`}
                           className='border-b border-pink-50'
                         >
                           <td
