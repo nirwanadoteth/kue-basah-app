@@ -111,26 +111,41 @@ CREATE TRIGGER update_transactions_updated_at BEFORE
 UPDATE ON transactions FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column ();
 
-CREATE OR REPLACE FUNCTION public.authenticate_user (p_username VARCHAR, p_password VARCHAR) RETURNS TABLE (user_id BIGINT, username VARCHAR) SECURITY DEFINER AS $$ BEGIN RETURN QUERY
-SELECT
-  u.id,
-  u.username
-FROM
-  users u
-WHERE
-  u.username = p_username
-  AND u.password_hash = crypt(p_password, u.password_hash);
-UPDATE
-  users
-SET
-  last_login = NOW()
-WHERE
-  users.username = p_username
-  AND users.password_hash = crypt(p_password, users.password_hash);
+CREATE OR REPLACE FUNCTION public.authenticate_user(
+    p_username VARCHAR,
+    p_password VARCHAR
+) RETURNS TABLE (user_id BIGINT, username VARCHAR) SECURITY DEFINER AS $$
+DECLARE
+    v_authenticated BOOLEAN;
+BEGIN
+    -- First, check authentication
+    SELECT EXISTS (
+        SELECT 1
+        FROM users u
+        WHERE u.username = p_username
+        AND u.password_hash = crypt(p_password, u.password_hash)
+    ) INTO v_authenticated;
+
+    -- If authenticated, update last_login and return user details
+    IF v_authenticated THEN
+        UPDATE users
+        SET last_login = NOW()
+        WHERE username = p_username
+        AND password_hash = crypt(p_password, password_hash);
+
+        RETURN QUERY
+        SELECT
+            u.id AS user_id,
+            u.username
+        FROM users u
+        WHERE u.username = p_username;
+    END IF;
+
+    -- Return nothing if authentication fails
+    RETURN;
 END;
 $$ LANGUAGE plpgsql
-SET
-  search_path = public;
+SET search_path = public;
 
 CREATE OR REPLACE FUNCTION public.update_transaction_total (p_transaction_id BIGINT) RETURNS DECIMAL(12, 2) AS $$ DECLARE v_new_total DECIMAL(12, 2);
 BEGIN
@@ -449,10 +464,10 @@ CREATE POLICY "Allow all operations on daily_reports" ON daily_reports FOR ALL U
 INSERT INTO
   users (username, password_hash)
 VALUES
-  ('admin', crypt ('admin123', gen_salt ('bf'))),
-  ('nay', crypt ('admin123', gen_salt ('bf'))),
-  ('kasir1', crypt ('admin123', gen_salt ('bf'))),
-  ('kasir2', crypt ('admin123', gen_salt ('bf')))
+  ('admin', crypt('admin123', gen_salt('bf'))),
+  ('nay', crypt('admin123', gen_salt('bf'))),
+  ('kasir1', crypt('admin123', gen_salt('bf'))),
+  ('kasir2', crypt('admin123', gen_salt('bf')))
 ON CONFLICT (username) DO NOTHING;
 
 -- Insert sample products
