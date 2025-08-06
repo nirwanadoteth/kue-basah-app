@@ -7,8 +7,13 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "lint:fix": "next lint --fix",
     "format": "prettier --check './**/*.{js,jsx,mjs,ts,tsx,css,md,json,sql}' --config ./prettier.config.mjs",
-    "format:fix": "prettier --write './**/*.{js,jsx,mjs,ts,tsx,css,md,json,sql}' --config ./prettier.config.mjs"
+    "format:fix": "prettier --write './**/*.{js,jsx,mjs,ts,tsx,css,md,json,sql}' --config ./prettier.config.mjs",
+    "type-check": "tsc --noEmit",
+    "analyze": "cross-env ANALYZE=true npm run build",
+    "db:setup": "echo 'Please run the SQL script in scripts/db.sql in your Supabase SQL editor'",
+    "clean": "rm -rf .next node_modules/.cache"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
