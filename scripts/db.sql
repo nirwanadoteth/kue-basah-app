@@ -48,7 +48,7 @@ CREATE TABLE users (
 
 CREATE TABLE transactions (
   id BIGSERIAL PRIMARY KEY,
-  user_id BIGINT NOT NULL REFERENCES users (id) ON DELETE RESTRICT,
+  user_id TEXT NOT NULL DEFAULT auth.jwt()->>'sub',
   total_price DECIMAL(12, 2) NOT NULL DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -473,9 +473,9 @@ VALUES
 INSERT INTO
   transactions (user_id)
 VALUES
-  (1),
-  (1),
-  (2);
+  ('user_30uLCRRX3hYwf51AUCiSNdb63ex'),
+  ('user_30uLCRRX3hYwf51AUCiSNdb63ex'),
+  ('user_30uLCRRX3hYwf51AUCiSNdb63ex');
 
 INSERT INTO
   transaction_details (

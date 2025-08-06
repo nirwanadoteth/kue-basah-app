@@ -10,7 +10,6 @@ import type {
   TransactionUpdate,
   TransactionWithDetails,
   DailyReport,
-  AuthUser,
   User,
   UserInsert,
   UserUpdate,
@@ -20,6 +19,7 @@ import type {
   DailyReportUpdate,
   TransactionDetailWithProduct,
 } from './types'
+import { auth } from '@clerk/nextjs/server'
 
 export type {
   Product,
@@ -31,7 +31,6 @@ export type {
   TransactionUpdate,
   TransactionWithDetails,
   DailyReport,
-  AuthUser,
   User,
   UserInsert,
   UserUpdate,
@@ -59,9 +58,8 @@ export const supabase = createClient(
   supabaseUrl || 'https://placeholder.supabase.co',
   supabaseAnonKey || 'placeholder-key',
   {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
+    async accessToken() {
+      return (await auth()).getToken()
     },
   },
 )

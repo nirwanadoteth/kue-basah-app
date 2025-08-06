@@ -2,8 +2,13 @@ import type React from 'react'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
-import { AuthProvider } from '@/lib/auth-context'
-import { AuthGuard } from '@/components/auth-guard'
+import {
+  ClerkProvider,
+  SignedIn,
+  SignedOut,
+  SignInButton,
+  UserButton,
+} from '@clerk/nextjs'
 import { Navbar } from '@/components/navbar'
 import { Footer } from '@/components/footer'
 import { ConnectionStatus } from '@/components/connection-status'
@@ -25,22 +30,28 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang='id'>
-      <body className={inter.className}>
-        <ErrorBoundary>
-          <AuthProvider>
-            <AuthGuard>
-              <div className='min-h-screen'>
-                <Navbar />
-                <main>{children}</main>
-                <Footer />
-                <ConnectionStatus />
-              </div>
-            </AuthGuard>
+    <ClerkProvider>
+      <html lang='id'>
+        <header>
+          <SignedOut>
+            <SignInButton />
+          </SignedOut>
+          <SignedIn>
+            <UserButton />
+          </SignedIn>
+        </header>
+        <body className={inter.className}>
+          <ErrorBoundary>
+            <div className='min-h-screen'>
+              <Navbar />
+              <main>{children}</main>
+              <Footer />
+              <ConnectionStatus />
+            </div>
             <Toaster position='top-right' />
-          </AuthProvider>
-        </ErrorBoundary>
-      </body>
-    </html>
+          </ErrorBoundary>
+        </body>
+      </html>
+    </ClerkProvider>
   )
 }

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useAuth } from '@/lib/auth-context'
+import { useUser, SignOutButton } from '@clerk/nextjs'
 import { Button } from '@/components/ui/button'
 import { LogOut, User } from 'lucide-react'
 
@@ -14,7 +14,7 @@ interface MobileNavProps {
 
 export function MobileNav({ isOpen, onClose, navItems }: MobileNavProps) {
   const pathname = usePathname()
-  const { user, logout } = useAuth()
+  const { user } = useUser()
 
   if (!isOpen) return null
 
@@ -40,20 +40,19 @@ export function MobileNav({ isOpen, onClose, navItems }: MobileNavProps) {
         {user && (
           <div className='flex items-center gap-3 px-4 text-base font-medium text-gray-700'>
             <User className='size-5' />
-            <span>{user.username}</span>
+            <span>{user.firstName || user.username || 'User'}</span>
           </div>
         )}
-        <Button
-          onClick={() => {
-            logout()
-            onClose()
-          }}
-          variant='ghost'
-          className='w-full justify-start px-4 py-2 text-base font-medium text-red-600 hover:bg-red-50 hover:text-red-700'
-        >
-          <LogOut className='mr-3 size-5' />
-          Keluar
-        </Button>
+        <SignOutButton>
+          <Button
+            onClick={onClose}
+            variant='ghost'
+            className='w-full justify-start px-4 py-2 text-base font-medium text-red-600 hover:bg-red-50 hover:text-red-700'
+          >
+            <LogOut className='mr-3 size-5' />
+            Keluar
+          </Button>
+        </SignOutButton>
       </div>
     </div>
   )

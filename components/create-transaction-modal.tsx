@@ -18,7 +18,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { useAuth } from '@/lib/auth-context'
 import { TransactionsAPI } from '@/lib/api/transactions'
 import { useProductStore } from '@/lib/stores/product-store'
 import { useTransactionActions } from '@/hooks/use-transaction-actions'
@@ -33,6 +32,7 @@ import {
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { toast } from 'sonner'
 import type { TransactionWithDetails } from '@/lib/supabase'
+import { useUser } from '@clerk/nextjs'
 
 interface CreateTransactionModalProps {
   trigger: React.ReactNode
@@ -66,8 +66,8 @@ export function CreateTransactionModal({
     initialTransactionId ? 'details' : 'create',
   )
 
-  const { user } = useAuth()
-  const userId = user?.user_id
+  const { user } = useUser()
+  const userId = user?.id
   const { products, fetchProducts } = useProductStore()
 
   const loadTransaction = useCallback(async () => {

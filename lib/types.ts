@@ -25,7 +25,7 @@ export interface User {
 // Transactions table (previously customer_transactions)
 export interface Transaction {
   id: number
-  user_id: number
+  user_id: string
   total_price: number
   created_at: string
   updated_at: string
@@ -130,12 +130,6 @@ export type TransactionDetailUpdate = Partial<
 
 export type DailyReportInsert = Omit<DailyReport, 'id' | 'created_at'>
 export type DailyReportUpdate = Partial<Omit<DailyReport, 'id' | 'created_at'>>
-
-// Authentication response type (from authenticate_user function)
-export interface AuthUser {
-  user_id: number
-  username: string
-}
 
 // Transaction with details (for display)
 export interface TransactionWithDetails extends Transaction {
