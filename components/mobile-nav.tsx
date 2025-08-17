@@ -1,8 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { useAuth } from '@/lib/auth-context'
+import { usePathname, useRouter } from 'next/navigation'
+import { authClient } from '@/lib/auth-client'
 import { Button } from '@/components/ui/button'
 import { LogOut, User } from 'lucide-react'
 
@@ -14,7 +14,18 @@ interface MobileNavProps {
 
 export function MobileNav({ isOpen, onClose, navItems }: MobileNavProps) {
   const pathname = usePathname()
-  const { user, logout } = useAuth()
+  const router = useRouter()
+  const { data: session } = authClient.useSession()
+  const user = session?.user
+
+  const handleLogout = async () => {
+    await authClient.signOut({
+      onSuccess: () => {
+        onClose()
+        router.push('/login')
+      },
+    })
+  }
 
   if (!isOpen) return null
 
@@ -40,14 +51,11 @@ export function MobileNav({ isOpen, onClose, navItems }: MobileNavProps) {
         {user && (
           <div className='flex items-center gap-3 px-4 text-base font-medium text-gray-700'>
             <User className='size-5' />
-            <span>{user.username}</span>
+            <span>{user.username || user.name}</span>
           </div>
         )}
         <Button
-          onClick={() => {
-            logout()
-            onClose()
-          }}
+          onClick={handleLogout}
           variant='ghost'
           className='w-full justify-start px-4 py-2 text-base font-medium text-red-600 hover:bg-red-50 hover:text-red-700'
         >

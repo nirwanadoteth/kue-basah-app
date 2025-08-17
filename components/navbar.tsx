@@ -1,8 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { useAuth } from '@/lib/auth-context'
+import { usePathname, useRouter } from 'next/navigation'
+import { authClient } from '@/lib/auth-client'
 import { Button } from '@/components/ui/button'
 import { Cake, Sparkles, LogOut, User, Menu, X } from 'lucide-react'
 import { useState } from 'react'
@@ -10,10 +10,21 @@ import { MobileNav } from './mobile-nav'
 
 export function Navbar() {
   const pathname = usePathname()
-  const { user, logout, isAuthenticated } = useAuth()
+  const router = useRouter()
+  const { data: session, isPending } = authClient.useSession()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
-  if (pathname === '/login' || !isAuthenticated) {
+  const handleLogout = async () => {
+    await authClient.signOut({
+      onSuccess: () => {
+        router.push('/login')
+      },
+    })
+  }
+
+  // While pending, we can show nothing or a skeleton.
+  // We also don't show the navbar on the login page.
+  if (isPending || pathname === '/login' || !session) {
     return null
   }
 
@@ -59,14 +70,15 @@ export function Navbar() {
         </div>
 
         <div className='hidden items-center gap-4 md:flex'>
-          {user && (
+          {session.user && (
             <div className='flex items-center gap-2 text-sm text-gray-600'>
               <User className='size-4' />
-              <span className='font-medium'>{user.username}</span>
+              {/* The user object from better-auth might have name or username */}
+              <span className='font-medium'>{session.user.username || session.user.name}</span>
             </div>
           )}
           <Button
-            onClick={logout}
+            onClick={handleLogout}
             variant='outline'
             size='sm'
             className='rounded-full border-red-200 bg-transparent text-red-600 hover:bg-red-50'

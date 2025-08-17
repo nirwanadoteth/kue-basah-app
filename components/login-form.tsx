@@ -1,9 +1,9 @@
 'use client'
 
 import type React from 'react'
-
 import { useState } from 'react'
-import { useAuth } from '@/lib/auth-context'
+import { useRouter } from 'next/navigation'
+import { authClient } from '@/lib/auth-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -17,8 +17,7 @@ export default function LoginForm() {
     password: '',
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
-
-  const { login } = useAuth()
+  const router = useRouter()
 
   const validateLoginInputs = (username: string, password: string) => {
     const errors: string[] = []
@@ -50,8 +49,36 @@ export default function LoginForm() {
     setIsSubmitting(true)
 
     try {
-      await login(formData.username, formData.password)
+      // Step 1: Attempt to migrate the user. This runs on every login attempt
+      // for a legacy user. The API is idempotent and will only migrate a user once.
+      // We don't block login if this fails; we'll just try again next time.
+      try {
+        await fetch('/api/migrate-user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: formData.username.trim().toLowerCase(),
+            password: formData.password,
+          }),
+        })
+      } catch (migrationError) {
+        console.error('User migration request failed:', migrationError)
+        // We don't notify the user about this, as it's a background process.
+      }
+
+      // Step 2: Attempt to sign in using the new auth provider.
+      const { error } = await authClient.signIn.username({
+        username: formData.username.trim().toLowerCase(),
+        password: formData.password,
+      })
+
+      if (error) {
+        // Use a generic error message for security.
+        throw new Error('Username atau password salah')
+      }
+
       toast.success('Login berhasil! Selamat datang kembali')
+      router.push('/')
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Login gagal'
@@ -100,6 +127,7 @@ export default function LoginForm() {
                   className='h-12 rounded-xl border-pink-200 pl-10 focus:border-pink-400'
                   disabled={isSubmitting}
                   required
+                  autoComplete='username'
                 />
               </div>
             </div>
@@ -121,6 +149,7 @@ export default function LoginForm() {
                   className='h-12 rounded-xl border-pink-200 pl-10 focus:border-pink-400'
                   disabled={isSubmitting}
                   required
+                  autoComplete='current-password'
                 />
               </div>
             </div>
