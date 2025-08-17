@@ -1,10 +1,9 @@
 'use client'
 
 import type React from 'react'
-
 import { useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import { useAuth } from '@/lib/auth-context'
+import { authClient } from '@/lib/auth-client'
 import { LoadingFallback } from '@/components/loading-fallback'
 
 interface AuthGuardProps {
@@ -12,17 +11,18 @@ interface AuthGuardProps {
 }
 
 export function AuthGuard({ children }: AuthGuardProps) {
-  const { isAuthenticated, isLoading } = useAuth()
+  const { data: session, isPending } = authClient.useSession()
   const router = useRouter()
   const pathname = usePathname()
+  const isAuthenticated = !!session
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated && pathname !== '/login') {
+    if (!isPending && !isAuthenticated && pathname !== '/login') {
       router.push('/login')
     }
-  }, [isAuthenticated, isLoading, router, pathname])
+  }, [isAuthenticated, isPending, router, pathname])
 
-  if (isLoading || (!isAuthenticated && pathname !== '/login')) {
+  if (isPending || (!isAuthenticated && pathname !== '/login')) {
     return <LoadingFallback />
   }
 
