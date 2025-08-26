@@ -90,7 +90,7 @@ export function Navbar() {
 
         <div className='md:hidden'>
           <Button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            onClick={() => { setIsMobileMenuOpen(!isMobileMenuOpen); }}
             variant='ghost'
             size='icon'
           >
@@ -105,7 +105,7 @@ export function Navbar() {
 
       <MobileNav
         isOpen={isMobileMenuOpen}
-        onClose={() => setIsMobileMenuOpen(false)}
+        onClose={() => { setIsMobileMenuOpen(false); }}
         navItems={navItems}
       />
     </nav>

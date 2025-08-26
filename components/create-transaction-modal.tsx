@@ -110,7 +110,7 @@ export function CreateTransactionModal({
   useEffect(() => {
     if (open) {
       if (currentTransactionId) {
-        loadTransaction()
+        void loadTransaction()
         fetchProducts()
         setView('details')
       } else {
@@ -267,7 +267,7 @@ export function CreateTransactionModal({
                 type='number'
                 min='1'
                 value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
+                onChange={(e) => { setQuantity(e.target.value); }}
                 placeholder='Jumlah'
                 className='w-24'
               />

@@ -118,7 +118,7 @@ export function EditProductModal({ trigger, product }: EditProductModalProps) {
             <Input
               id='edit-name'
               value={formData.name}
-              onChange={(e) => handleInputChange('name', e.target.value)}
+              onChange={(e) => { handleInputChange('name', e.target.value); }}
               placeholder='Nama produk'
               className='border-pink-200 focus:border-pink-400'
               maxLength={100}
@@ -134,7 +134,7 @@ export function EditProductModal({ trigger, product }: EditProductModalProps) {
               min='0'
               step='100'
               value={formData.price}
-              onChange={(e) => handleInputChange('price', e.target.value)}
+              onChange={(e) => { handleInputChange('price', e.target.value); }}
               placeholder='Harga produk'
               className='border-pink-200 focus:border-pink-400'
               required
@@ -148,7 +148,7 @@ export function EditProductModal({ trigger, product }: EditProductModalProps) {
               type='number'
               min='0'
               value={formData.minStock}
-              onChange={(e) => handleInputChange('minStock', e.target.value)}
+              onChange={(e) => { handleInputChange('minStock', e.target.value); }}
               placeholder='Stok minimum'
               className='border-pink-200 focus:border-pink-400'
               required
@@ -174,7 +174,7 @@ export function EditProductModal({ trigger, product }: EditProductModalProps) {
             <Button
               type='button'
               variant='outline'
-              onClick={() => setOpen(false)}
+              onClick={() => { setOpen(false); }}
               className='flex-1 border-pink-200 hover:bg-pink-50'
               disabled={isLoading}
             >

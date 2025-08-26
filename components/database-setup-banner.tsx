@@ -30,7 +30,7 @@ export function DatabaseSetupBanner() {
       await fetchProducts()
       setIsVisible(false)
       setShowSuccess(true)
-      setTimeout(() => setShowSuccess(false), 3000)
+      setTimeout(() => { setShowSuccess(false); }, 3000)
       sessionStorage.setItem('db_check_complete', 'true')
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : ''
@@ -46,7 +46,7 @@ export function DatabaseSetupBanner() {
   }, [fetchProducts])
 
   useEffect(() => {
-    performDatabaseCheck()
+    void performDatabaseCheck()
   }, [performDatabaseCheck])
 
   const handleRunSetup = () => {

@@ -121,7 +121,7 @@ export default function LoginForm() {
                   type='text'
                   value={formData.username}
                   onChange={(e) =>
-                    handleInputChange('username', e.target.value)
+                    { handleInputChange('username', e.target.value); }
                   }
                   placeholder='Masukkan username'
                   className='h-12 rounded-xl border-pink-200 pl-10 focus:border-pink-400'
@@ -143,7 +143,7 @@ export default function LoginForm() {
                   type='password'
                   value={formData.password}
                   onChange={(e) =>
-                    handleInputChange('password', e.target.value)
+                    { handleInputChange('password', e.target.value); }
                   }
                   placeholder='Masukkan password'
                   className='h-12 rounded-xl border-pink-200 pl-10 focus:border-pink-400'

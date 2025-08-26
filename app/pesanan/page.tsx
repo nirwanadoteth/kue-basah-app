@@ -141,7 +141,7 @@ export default function TransactionsPage() {
   }, [transactions, searchTerm, dateFilter])
 
   useEffect(() => {
-    initializeData()
+    void initializeData()
   }, [initializeData])
 
   useEffect(() => {
@@ -166,14 +166,14 @@ export default function TransactionsPage() {
   }
 
   const handleTransactionCreated = (transactionId: number) => {
-    loadTransactions()
-    loadStats()
+    void loadTransactions()
+    void loadStats()
     setSelectedTransactionId(transactionId)
   }
 
   const handleTransactionUpdated = () => {
-    loadTransactions()
-    loadStats()
+    void loadTransactions()
+    void loadStats()
   }
 
   if (isInitialLoading) {
@@ -324,13 +324,13 @@ export default function TransactionsPage() {
             placeholder='Cari (ID, nama admin)...'
             className='rounded-full border-pink-200 pl-10 focus:border-pink-400'
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => { setSearchTerm(e.target.value); }}
           />
         </div>
 
         <select
           value={dateFilter}
-          onChange={(e) => setDateFilter(e.target.value)}
+          onChange={(e) => { setDateFilter(e.target.value); }}
           className='rounded-full border border-pink-200 bg-white px-4 py-2 focus:border-pink-400 focus:outline-none'
         >
           <option value='all'>Semua Tanggal</option>
@@ -414,7 +414,7 @@ export default function TransactionsPage() {
                               size='sm'
                               className='cotton-candy-button rounded-full from-blue-400 to-cyan-400 px-3'
                               title='Lihat Detail'
-                              onClick={() => handleViewDetails(transaction.id)}
+                              onClick={() => { handleViewDetails(transaction.id); }}
                             >
                               <Eye className='size-3' />
                             </Button>

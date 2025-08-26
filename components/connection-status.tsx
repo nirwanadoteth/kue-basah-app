@@ -106,12 +106,12 @@ export function ConnectionStatus() {
   }
 
   useEffect(() => {
-    checkConnection()
+    void checkConnection()
 
     // Check connection every 60 seconds
     const interval = setInterval(checkConnection, 60000)
 
-    return () => clearInterval(interval)
+    return () => { clearInterval(interval); }
   }, [])
 
   // Don't show anything while initial check or if everything is working

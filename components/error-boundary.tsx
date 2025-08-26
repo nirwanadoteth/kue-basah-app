@@ -90,7 +90,7 @@ function DefaultErrorFallback({
           </details>
           <div className='flex gap-3'>
             <Button
-              onClick={() => window.location.reload()}
+              onClick={() => { window.location.reload(); }}
               variant='outline'
               className='flex-1 border-pink-200 hover:bg-pink-50'
             >
