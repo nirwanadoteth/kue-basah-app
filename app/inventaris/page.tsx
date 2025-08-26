@@ -41,7 +41,7 @@ export default function InventoryManagement() {
       }
     }
 
-    initializeData()
+    void initializeData()
   }, [fetchProducts])
 
   useEffect(() => {
@@ -128,7 +128,7 @@ export default function InventoryManagement() {
               placeholder='Cari produk...'
               className='w-64 rounded-full border-pink-200 pl-10 focus:border-pink-400'
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => { setSearchTerm(e.target.value); }}
             />
           </div>
 

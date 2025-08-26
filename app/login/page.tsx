@@ -2,23 +2,24 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/lib/auth-context'
+import { authClient } from '@/lib/auth-client'
 import LoginForm from '@/components/login-form'
 import { LoadingFallback } from '@/components/loading-fallback'
 
 export default function LoginPage() {
-  const { isAuthenticated, isLoading } = useAuth()
+  const { data: session, isPending } = authClient.useSession()
   const router = useRouter()
+  const isAuthenticated = !!session
 
   useEffect(() => {
     // If already authenticated, redirect to dashboard
-    if (!isLoading && isAuthenticated) {
+    if (!isPending && isAuthenticated) {
       router.push('/')
     }
-  }, [isAuthenticated, isLoading, router])
+  }, [isAuthenticated, isPending, router])
 
   // Show loading while checking authentication
-  if (isLoading) {
+  if (isPending) {
     return <LoadingFallback />
   }
 

@@ -25,7 +25,7 @@ export interface User {
 // Transactions table (previously customer_transactions)
 export interface Transaction {
   id: number
-  user_id: number
+  user_id: string // Changed from number to string to match better-auth user ID
   total_price: number
   created_at: string
   updated_at: string

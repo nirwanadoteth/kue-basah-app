@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { useAuth } from '@/lib/auth-context'
+import { authClient } from '@/lib/auth-client'
 import { TransactionsAPI } from '@/lib/api/transactions'
 import { useProductStore } from '@/lib/stores/product-store'
 import { useTransactionActions } from '@/hooks/use-transaction-actions'
@@ -66,8 +66,9 @@ export function CreateTransactionModal({
     initialTransactionId ? 'details' : 'create',
   )
 
-  const { user } = useAuth()
-  const userId = user?.user_id
+  const { data: session } = authClient.useSession()
+  const user = session?.user
+  const userId = user?.id
   const { products, fetchProducts } = useProductStore()
 
   const loadTransaction = useCallback(async () => {
@@ -109,7 +110,7 @@ export function CreateTransactionModal({
   useEffect(() => {
     if (open) {
       if (currentTransactionId) {
-        loadTransaction()
+        void loadTransaction()
         fetchProducts()
         setView('details')
       } else {
@@ -183,7 +184,7 @@ export function CreateTransactionModal({
     <form onSubmit={handleCreateAndOpenDetails} className='space-y-4'>
       <div className='rounded-lg bg-blue-50 p-3'>
         <div className='text-sm text-blue-800'>
-          <p className='font-medium'>Admin: {user?.username}</p>
+          <p className='font-medium'>Admin: {user?.username || user?.name}</p>
           <p className='mt-1 text-xs text-blue-600'>
             {isOrder
               ? 'Pesanan akan dicatat atas nama Anda sebagai admin.'
@@ -266,7 +267,7 @@ export function CreateTransactionModal({
                 type='number'
                 min='1'
                 value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
+                onChange={(e) => { setQuantity(e.target.value); }}
                 placeholder='Jumlah'
                 className='w-24'
               />

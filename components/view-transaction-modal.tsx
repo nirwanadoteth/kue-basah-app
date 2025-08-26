@@ -54,7 +54,7 @@ export function ViewTransactionModal({
 
   useEffect(() => {
     if (open && transactionId) {
-      loadTransaction()
+      void loadTransaction()
     }
   }, [open, transactionId, loadTransaction])
 

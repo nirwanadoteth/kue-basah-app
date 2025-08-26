@@ -110,7 +110,7 @@ export default function Reports() {
       }
     }
 
-    initializeData()
+    void initializeData()
   }, [fetchProducts, fetchTransactions, fetchReports])
 
   const handleTabChange = async (tab: string) => {

@@ -2,7 +2,6 @@ import type React from 'react'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
-import { AuthProvider } from '@/lib/auth-context'
 import { AuthGuard } from '@/components/auth-guard'
 import { Navbar } from '@/components/navbar'
 import { Footer } from '@/components/footer'
@@ -28,17 +27,15 @@ export default function RootLayout({
     <html lang='id'>
       <body className={inter.className}>
         <ErrorBoundary>
-          <AuthProvider>
-            <AuthGuard>
-              <div className='min-h-screen'>
-                <Navbar />
-                <main>{children}</main>
-                <Footer />
-                <ConnectionStatus />
-              </div>
-            </AuthGuard>
-            <Toaster position='top-right' />
-          </AuthProvider>
+          <AuthGuard>
+            <div className='min-h-screen'>
+              <Navbar />
+              <main>{children}</main>
+              <Footer />
+              <ConnectionStatus />
+            </div>
+          </AuthGuard>
+          <Toaster position='top-right' />
         </ErrorBoundary>
       </body>
     </html>

@@ -71,7 +71,7 @@ export function DeleteProductModal({
           <Button
             type='button'
             variant='outline'
-            onClick={() => setOpen(false)}
+            onClick={() => { setOpen(false); }}
             className='flex-1 border-pink-200 hover:bg-pink-50'
             disabled={isLoading}
           >
