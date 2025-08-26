@@ -88,8 +88,12 @@ export default function LoginForm() {
     }
   }
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
+  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData((prev) => ({ ...prev, username: e.target.value }))
+  }
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData((prev) => ({ ...prev, password: e.target.value }))
   }
 
   return (
@@ -120,9 +124,7 @@ export default function LoginForm() {
                   id='username'
                   type='text'
                   value={formData.username}
-                  onChange={(e) =>
-                    { handleInputChange('username', e.target.value); }
-                  }
+                  onChange={handleUsernameChange}
                   placeholder='Masukkan username'
                   className='h-12 rounded-xl border-pink-200 pl-10 focus:border-pink-400'
                   disabled={isSubmitting}
@@ -142,9 +144,7 @@ export default function LoginForm() {
                   id='password'
                   type='password'
                   value={formData.password}
-                  onChange={(e) =>
-                    { handleInputChange('password', e.target.value); }
-                  }
+                  onChange={handlePasswordChange}
                   placeholder='Masukkan password'
                   className='h-12 rounded-xl border-pink-200 pl-10 focus:border-pink-400'
                   disabled={isSubmitting}

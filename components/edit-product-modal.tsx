@@ -97,8 +97,16 @@ export function EditProductModal({ trigger, product }: EditProductModalProps) {
     }
   }
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData((prev) => ({ ...prev, name: e.target.value }))
+  }
+
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData((prev) => ({ ...prev, price: e.target.value }))
+  }
+
+  const handleMinStockChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData((prev) => ({ ...prev, minStock: e.target.value }))
   }
 
   return (
@@ -118,7 +126,7 @@ export function EditProductModal({ trigger, product }: EditProductModalProps) {
             <Input
               id='edit-name'
               value={formData.name}
-              onChange={(e) => { handleInputChange('name', e.target.value); }}
+              onChange={handleNameChange}
               placeholder='Nama produk'
               className='border-pink-200 focus:border-pink-400'
               maxLength={100}
@@ -134,7 +142,7 @@ export function EditProductModal({ trigger, product }: EditProductModalProps) {
               min='0'
               step='100'
               value={formData.price}
-              onChange={(e) => { handleInputChange('price', e.target.value); }}
+              onChange={handlePriceChange}
               placeholder='Harga produk'
               className='border-pink-200 focus:border-pink-400'
               required
@@ -148,7 +156,7 @@ export function EditProductModal({ trigger, product }: EditProductModalProps) {
               type='number'
               min='0'
               value={formData.minStock}
-              onChange={(e) => { handleInputChange('minStock', e.target.value); }}
+              onChange={handleMinStockChange}
               placeholder='Stok minimum'
               className='border-pink-200 focus:border-pink-400'
               required
